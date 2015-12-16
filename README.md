@@ -11,7 +11,7 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 
 ## Potential App functionality 
 
-### App angle 1: News and inspiration (Maybe will be implemented partitially)
+### App angle 1: News and inspiration (Maybe will be implemented partially)
 
 #### News:
 - News text from http://www.climbing.com/feed/ (rss)
