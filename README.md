@@ -36,7 +36,7 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 - Climbing Locations from climbing.iloove.it (scraped)
 
 
-### Other potentioal sources:
+### Other potential sources:
 
 	Twitter, instagram, google street view, 
 	
