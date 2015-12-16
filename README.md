@@ -5,7 +5,7 @@ A mashup application for the course 1dv449 on Linnaeus University
 
 Appname: My Climbing Trip / Climbing Companion
 
-The application is going to be an Angular.js mobile based application (http://mobileangularui.com/). It's not going go commersial or be published on Google Play or iTunes in the first phase of development, maybe later depending on licencing issues and such.
+The application is going to be an Angular.js mobile based application (http://mobileangularui.com/). It's not going go commercial or be published on Google Play or iTunes in the first phase of development, maybe later depending on licencing issues and such.
    
 I have two potential paths to follow. Focusing on both will be too time-consuming.
 
