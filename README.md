@@ -11,7 +11,19 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 
 ## Potential App functionality 
 
-### App angle 1: News and inspiration (Maybe will be implemented partially)
+### App angle 1: Tools for climbing trips (This is the main focus for now)
+
+#### Tools:
+- Nearest gas stations from eniro (API) (Swedish only)
+- Nearest accomodations from STR (API) (Swedish only)
+- Nearest bathing sites from eniro (API) (Swedish only)
+- Climbing Locations from climbing.iloove.it (scraped)
+- Pictures of locations from climbing.iloove.it (scraped)
+- Climbing Locations from thecrag.com (API)
+- Weather info for location from yr.no (API)
+- Google maps for map (API)
+
+### App angle 2: News and inspiration (Maybe will be implemented partially)
 
 #### News:
 - News text from http://www.climbing.com/feed/ (rss)
@@ -23,17 +35,6 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 - Pictures from climbing.iloove.it (scraped)
 - Climbing Locations from climbing.iloove.it (scraped)
 
-### App angle 2: Tools for climbing trips (This is the main focus for now)
-
-#### Tools:
-- Nearest gas stations from eniro (API) (Swedish only)
-- Nearest accomodations from STR (API) (Swedish only)
-- Nearest bathing sites from eniro (API) (Swedish only)
-- Climbing Locations from climbing.iloove.it (scraped)
-- Pictures of locations from climbing.iloove.it (scraped)
-- Climbing Locations from thecrag.com (API)
-- Weather info for location from yr.no (API)
-- Google maps for map (API)
 
 ### Other potentioal sources:
 
