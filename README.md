@@ -43,22 +43,22 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 ## Memos
 
 Working order:
-1   Setup/build a climbing GeoJSON search engine
-    1.1 Install couchDB with GeoCouch
-    1.2 Build scrapers for different climbing sites (which approves this) that scrapes markers and stores GeoJSON objects with href links to the sites for more information about the GeoJSON marker. This gives the climbing sites more potential users.
+1. Setup/build a climbing GeoJSON search engine
+    1. Install couchDB with GeoCouch
+    1. Build scrapers for different climbing sites (which approves this) that scrapes markers and stores GeoJSON objects with href links to the sites for more information about the GeoJSON marker. This gives the climbing sites more potential users.
 
-2   Setup project enviroment
+2. Setup project enviroment
 
 #### 1.1 CouchDB with GeoCouch extension/plugin
 
-1   Install and run the following docker container https://hub.docker.com/r/elecnix/geocouch/
+1. Install and run the following docker container https://hub.docker.com/r/elecnix/geocouch/
 
 #### 2. Setup project enviroment
-    - GitHub client
-    - Node.js
-    - Java SDK
-    - Android SDK
-    - Install Cordova (API that gives the App access to Android hardware)
-    - Apache Ant
-    - Genymotion (Android)
-    - Ionic (Angular Mobile App Framework)
+- GitHub client
+- Node.js
+- Java SDK
+- Android SDK
+- Install Cordova (API that gives the App access to Android hardware)
+- Apache Ant
+- Genymotion (Android)
+- Ionic (Angular Mobile App Framework)
