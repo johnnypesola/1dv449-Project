@@ -44,8 +44,8 @@ I have two potential paths to follow. Focusing on both will be too time-consumin
 
 Working order:
 1. Setup/build a climbing GeoJSON search engine
-    1. Install couchDB with GeoCouch
-    1. Build scrapers for different climbing sites (which approves this) that scrapes markers and stores GeoJSON objects with href links to the sites for more information about the GeoJSON marker. This gives the climbing sites more potential users.
+    - Install couchDB with GeoCouch
+    - Build scrapers for different climbing sites (which approves this) that scrapes markers and stores GeoJSON objects with href links to the sites for more information about the GeoJSON marker. This gives the climbing sites more potential users.
 
 2. Setup project enviroment
 
