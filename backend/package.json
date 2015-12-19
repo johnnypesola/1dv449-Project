@@ -1,0 +1,17 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "API accesspoint to mongodb",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Johnny Pesola",
+  "license": "ISC",
+  "devDependencies": {
+    "mongodb": "~2.0.52",
+    "restify": "^4.0.3",
+    "mongoose": "~4.3.3"
+  }
+}
