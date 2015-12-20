@@ -12,6 +12,7 @@
   "devDependencies": {
     "mongodb": "~2.0.52",
     "restify": "^4.0.3",
-    "mongoose": "~4.3.3"
+    "mongoose": "~4.3.3",
+    "validator": "~4.4.0"
   }
 }
