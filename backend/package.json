@@ -18,6 +18,8 @@
     "cheerio": "~0.19.0",
     "robots": "~0.9.4",
     "q": "~1.4.1",
-    "iconv-lite": "~0.4.13"
+    "iconv-lite": "~0.4.13",
+    "xss-filters": "~1.2.6",
+    "mongo-sanitize": "~1.0.0"
   }
 }

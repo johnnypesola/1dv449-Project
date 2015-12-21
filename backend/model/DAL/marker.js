@@ -15,7 +15,7 @@ var markerSchema = new mongoose.Schema({
             type: String,
             default: 'Point'
         },
-        coordinates: [Number]
+        coordinates: [ ]
     }
 });
 

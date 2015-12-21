@@ -115,8 +115,7 @@ var Scraper = function(baseUrl){
 
     this.getAsHtml = function(url){
 
-        var $, markersArray;
-        var markerRawData;
+        var $;
 
         // Create promise
         var deferred = q.defer();
