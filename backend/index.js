@@ -23,4 +23,7 @@ server.listen(3000, function () {
 // Require routes / endpoints
 require('./routes/v1.0/markers')(server);
 
+// Require scrapers
+require('./routes/scrapers/sverigeforaren.se')(server);
+
 

@@ -38,6 +38,8 @@ module.exports = function( server ){
             validator.isFloat(lon, { min: -180, max: 180 })
         ){
 
+            console.log("yeah");
+
             // Get near markers from database
             markerModel.geoNear([lon, lat], { maxDistance : distanceinMeters, spherical : true })
 
@@ -47,14 +49,17 @@ module.exports = function( server ){
                     // Display results
                     res.send(results);
                     return next();
-                })
+                });
 
-                // An error occured
+                // An error occured TODO: mongoose does not support .catch() promises
+                /*
                 .catch(function(){
+
+                    console.log("error occured");
 
                     res.send(500);
                     return next();
-                })
+                })*/
         }
     });
 
