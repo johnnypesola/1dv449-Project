@@ -6,14 +6,18 @@ var Scraper = require('./../../model/scraper');
 var iconv = require('iconv-lite');
 var q = require('q');
 var cheerio = require('cheerio');
+var request = require('request');
 
 // Url to scrape
 var baseUrl = "http://www.sverigeforaren.se/";
 var urlToScrape = "http://www.sverigeforaren.se/search-results/?search_query=&tax_listings_categories=klippa&tax_listings_location=svealand&meta_listing_is_featured=&wpas=1";
 
 // Route strings setup
+var siteFullName = "Sverigeföraren";
 var siteName = "sverigeforaren";
 var baseRoute = "/scrapers/" + siteName;
+
+var targetApiAddress = "http://localhost:3000/v1.0/markers/multi";
 
 // Create Scraper
 var scraperObj = new Scraper(baseUrl);
@@ -135,7 +139,7 @@ module.exports = function( server ) {
 
                 // Put data in new marker object
                 markerToSave = {
-                    source: siteName,
+                    source: siteFullName,
                     name: aElem.text(),
                     href: aElem.attr('href'),
                     lon: elem.latLng[1],
@@ -148,6 +152,23 @@ module.exports = function( server ) {
             console.log("Elements are parsed.")
         };
 
+        var postToApi = function (){
+
+            // Post to API
+            request.post(targetApiAddress, {json: markersToSaveArray}, function(error, response, html){
+
+                console.log("Posted markers to API");
+
+                // Forward statuscode
+                res.send(html.statusCode);
+
+                // return JSON output
+                //res.json(markersToSaveArray, {'content-type': 'application/json; charset=utf-8'});
+
+                return next();
+            });
+        };
+
         // Init code
         try {
             parsePage()
@@ -155,10 +176,7 @@ module.exports = function( server ) {
 
                     parseValuesToArray();
 
-                    // return JSON output
-                    res.json(markersToSaveArray, {'content-type': 'application/json; charset=utf-8'});
-
-                    return next();
+                    postToApi();
                 })
         }
         catch (error){
