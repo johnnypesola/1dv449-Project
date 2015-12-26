@@ -71,7 +71,7 @@ module.exports = function( server ) {
 
 // Public API calls
 
-    server.get(baseRoute + "/getnew", function (req, res, next) {
+    server.get(baseRoute + "/getall", function (req, res, next) {
 
         // Define an array that should contain parsed markers
         var markersParsedArray;
@@ -84,8 +84,8 @@ module.exports = function( server ) {
             var deferred = q.defer();
 
             // Scrape the url
-            scraperObj.getFileAsHtml("temp-data/sverigeforaren.se.html")
-            //scraperObj.getAsHtml(urlToScrape)
+            //scraperObj.getFileAsHtml("temp-data/sverigeforaren.se.html")
+            scraperObj.getAsHtml(urlToScrape)
                 .then(function (doc) {
 
                     // Get markers raw data in script tag

@@ -3,9 +3,7 @@
  */
 
 var Scraper = require('./../../model/scraper');
-var iconv = require('iconv-lite');
 var q = require('q');
-var cheerio = require('cheerio');
 var request = require('request');
 
 // Url to scrape
@@ -39,7 +37,7 @@ module.exports = function( server ) {
 
 // Public API calls
 
-    server.get(baseRoute + "/getnew", function (req, res, next) {
+    server.get(baseRoute + "/getall", function (req, res, next) {
 
         // Define an array that should contain parsed markers
         var markerRawData;
@@ -55,6 +53,10 @@ module.exports = function( server ) {
             scraperObj.getFileAsHtml("temp-data/8a.nu.html")
             //scraperObj.getAsHtml(urlToScrape)
                 .then(function (doc) {
+
+                    console.log("Started parsing page. " + doc.length);
+
+                    //console.log(doc);
 
                     // Get markers raw data in script tag
                     markerRawData = doc('script:contains("L.marker([")').text();
@@ -72,7 +74,7 @@ module.exports = function( server ) {
                     // Get marker raw data
                     markerRawData = markerRawData.substring(toParseStart, toParseEnd);
 
-                    console.log("Page is parsed.");
+                    console.log("Page is parsed: " + markerRawData.length);
 
                     // Resolve promise
                     deferred.resolve();
@@ -82,6 +84,8 @@ module.exports = function( server ) {
 
                     // Reject promise
                     deferred.reject(error);
+
+                    console.log(error);
 
                     displayError(res, next);
                 });
@@ -128,7 +132,7 @@ module.exports = function( server ) {
                 markersToSaveArray.push(markerToSave);
             });
 
-            console.log("Elements are parsed.");
+            console.log("Elements are parsed: " + markersToSaveArray.length);
         };
 
         var postToApi = function (){

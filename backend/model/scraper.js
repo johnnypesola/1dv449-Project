@@ -33,9 +33,42 @@ var Scraper = function(baseUrl){
         return false;
     };
 
-    this.fetchPage = function(url, callback){
+    this.isOkToFetchPage = function (url){
 
+        // Define robots.txt target file
         var robotsTxtFile = that.fixUrl(baseUrl + "/robots.txt");
+
+        // Create promise
+        var deferred = q.defer();
+
+        // Get robots.txt
+        robotsParser.setUrl(robotsTxtFile, function(robotsParser, success) {
+
+            if (success) {
+
+                // If its ok to fetch the target link according to robots.txt
+                robotsParser.canFetch('*', '/' + that.stripBaseUrl(url), function (access) {
+
+                    if(access) {
+                        deferred.resolve();
+                    }
+                    else {
+                        deferred.reject("ERROR: robots.txt forbids to fetch the target page.");
+                    }
+                })
+            }
+
+            else {
+                // Error occurred fetching robots.txt. It's probably missing. It's ok to fetch page
+                deferred.resolve();
+            }
+        });
+
+        // Return promise
+        return deferred.promise;
+    };
+
+    this.fetchPage = function(url, callback){
 
         // Prepare some options for request.js
         var requestOptions = {
@@ -48,36 +81,24 @@ var Scraper = function(baseUrl){
         // Create promise
         var deferred = q.defer();
 
-        // Get robots.txt
-        robotsParser.setUrl(robotsTxtFile, function(robotsParser, success) {
-            if (success) {
+        that.isOkToFetchPage(url)
+            .then(function(){
 
-                // If its ok to fetch the target link according to robots.txt
-                robotsParser.canFetch('*', '/' + that.stripBaseUrl(url), function (access) {
-                    if (access) {
+                // Get the page specified in options
+                request(requestOptions, function(error, response, html) {
 
-                        // Get the page specified in options
-                        request(requestOptions, function(error, response, html) {
+                    // In case there were no errors
+                    if (!that.checkForGetError(error, response, deferred)) {
 
-                            // In case there were no errors
-                            if (!that.checkForGetError(error, response, deferred)) {
-
-                                // Resolve promise
-                                deferred.resolve(html);
-                            }
-                        });
-                    }
-                    else {
-                        // Reject promise
-                        deferred.reject("ERROR: robots.txt on host server prevents access to '" + url + "'");
+                        // Resolve promise
+                        deferred.resolve(html);
                     }
                 });
-            }
-            else {
-                // Reject promise
-                deferred.reject("ERROR: Occurred fetching robots.txt'");
-            }
-        });
+            })
+            .catch(function(error){
+
+                deferred.reject(error)
+            });
 
         // Return promise
         return deferred.promise;
@@ -119,6 +140,7 @@ var Scraper = function(baseUrl){
 
         // Create promise
         var deferred = q.defer();
+
 
         // Fetch the url
         that.fetchPage(url)

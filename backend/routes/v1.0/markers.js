@@ -10,7 +10,8 @@ var mongoSanitize = require('mongo-sanitize');
 var q = require('q');
 
 // Require models
-var markerModel = require('../../model/DAL/marker');
+var Marker = require('../../model/BLL/marker');
+var MarkerDAL = require('../../model/DAL/markerDAL');
 
 // Route strings setup
 var name = "markers";
@@ -44,72 +45,27 @@ module.exports = function( server ) {
         return next;
     };
 
-    var saveMarker = function(values, res, next) {
+    var saveMarker = function(marker, res, next) {
 
         // Create promise
         var deferred = q.defer();
 
-        // Init and parse variables
-        var marker = {};
+        // Convert to DAL object
+        marker = new MarkerDAL(marker);
 
-        marker.lat = parseFloat(values.lat);
-        marker.lon = parseFloat(values.lon);
-        marker.source = validator.whitelist(values.source, ".@a-zA-Z0-9À-ÖØ-öø-ÿ");
-        marker.name = validator.whitelist(values.name, ".@a-zA-Z0-9À-ÖØ-öø-ÿ");
-        marker.href = values.href;
-
-        // Validate variables
-        if (
-            // Source
-            !validator.isNull(marker.source) &&
-            validator.isLength(marker.source, 1, 70) &&
-
-                // Name
-            !validator.isNull(marker.name) &&
-            validator.isLength(marker.name, 1, 70) &&
-
-                // href
-            !validator.isNull(marker.href) &&
-            validator.isURL(marker.href) &&
-            validator.isLength(marker.href, 1, 1000) &&
-
-                // Latitude
-            !validator.isNull(marker.lat) &&
-            validator.isFloat(marker.lat, {min: -90, max: 90}) &&
-
-                // Longitude
-            !validator.isNull(marker.lon) &&
-            validator.isFloat(marker.lon, {min: -180, max: 180})
-        ) {
-
-            // Create marker model, sanitize from mongodb sql injections and xss attacks
-            var markerToSave = markerModel({
-                source: mongoSanitize(xssFilters.inHTMLData(marker.source)),
-                name: mongoSanitize(xssFilters.inHTMLData(marker.name)),
-                href: mongoSanitize(xssFilters.inHTMLData(marker.href)),
-                location: { // GeoJSON specific declaration
-                    type: "Point",
-                    coordinates: [marker.lon, marker.lat]
-                }
-            });
-
-            // Save marker in db
-            markerToSave.save(function (error) {
+        // Save marker in db
+        marker.save(function (error) {
 
                 if (error) {
+
+                    console.log(error);
+
                     return displayError(res, next);
                 }
 
                 // Resolve promise
                 deferred.resolve();
-            })
-        }
-        else {
-            // Reject promise
-            deferred.reject();
-
-            displayError(res, next);
-        }
+            });
 
         // Return promise
         return deferred.promise;
@@ -121,7 +77,7 @@ module.exports = function( server ) {
     server.get(baseRoute, function (req, res, next) {
 
         // Find all
-        markerModel.find({}, function(error, results) {
+        MarkerDAL.find({}, function(error, results) {
 
             if(error){
                 return displayError(res, next)
@@ -152,7 +108,7 @@ module.exports = function( server ) {
         ) {
 
             // Get near markers from database
-            markerModel.geoNear([lon, lat], {
+            MarkerDAL.geoNear([lon, lat], {
                 maxDistance: distanceInKiloMeters,
                 spherical : true,
                 distanceField: "distance"
@@ -181,7 +137,7 @@ module.exports = function( server ) {
         if(validator.isMongoId(id)){
 
             // Try to remove document
-            markerModel.remove(
+            MarkerDAL.remove(
                 {
                     _id: mongoSanitize(id)
                 },
@@ -202,11 +158,11 @@ module.exports = function( server ) {
         }
     });
 
-    // Remove marker
+    // Remove all markers
     server.del(baseRoute + "/clear", function(req, res, next) {
 
         // Try to remove document
-        markerModel.remove(
+        MarkerDAL.remove(
             {},
             function(error){
 
@@ -224,27 +180,39 @@ module.exports = function( server ) {
     // Save marker
     server.post(baseRoute, function (req, res, next) {
 
-        // Save marker
-        saveMarker(req.params, res, next)
+        // Create marker BLL object
+        var marker = new Marker(
+            req.params.lat,
+            req.params.lon,
+            req.params.source,
+            req.params.href,
+            req.params.name
+        );
 
-            // All went well
-            .then(function(){
+        if(marker.IsValid()){
+            marker.SanitizeModel();
 
-                // Display result
-                res.send(200);
-                return next();
-            })
-            // An error occured
-            .catch(function(){
-                displayError(res, next);
-            })
+            saveMarker(marker, res, next)
+
+                // All went well
+                .then(function(){
+
+                    // Display result
+                    res.send(200);
+                    return next();
+                })
+                // An error occured
+                .catch(function(){
+                    displayError(res, next);
+                })
+
+        }
     });
 
     // Save many markers
     server.post(baseRoute + "/multi", function (req, res, next) {
 
         var containerObj = req.params;
-        var isOkToContinue;
 
         // Check that we got an array.
         if(Array.isArray(containerObj)){
@@ -252,28 +220,34 @@ module.exports = function( server ) {
             console.log("Got multi marker post");
 
             // Loop trough markers
-            containerObj.forEach(function(marker){
+            containerObj.forEach(function(values){
 
-                //isOkToContinue = false;
+                // Create marker BLL object
+                var marker = new Marker(
+                    values.lat,
+                    values.lon,
+                    values.source,
+                    values.href,
+                    values.name
+                );
 
-                // Save marker
-                saveMarker(marker, res, next)
+                if(marker.IsValid()) {
+                    marker.SanitizeModel();
+
+                    // Save marker
+                    saveMarker(marker, res, next)
 
                     // All went well
-                    .then(function(){
+                        .then(function(){
 
-                        console.log("saved marker" + marker.name);
+                            console.log("saved marker: " + marker.name);
 
-//                        isOkToContinue = true;
-                    })
-                    // An error occured
-                    .catch(function(){
-                        displayError(res, next);
-//                        return false;
-                    });
-
-//                while(!isOkToContinue){}
-
+                        })
+                        // An error occured
+                        .catch(function(){
+                            displayError(res, next);
+                        });
+                }
             });
 
             // Display result
