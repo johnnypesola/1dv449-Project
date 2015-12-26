@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="sv-SE" prefix="og: http://ogp.me/ns#">
+<head>
+
+    </head>
+<body>
+
+
+<script type="text/javascript">
+
+    var mapDiv, map, infobox;
+
+    jQuery(document).ready(function($) {
+
+        mapDiv = jQuery("#map");
+        mapDiv.gmap3({
+
+                    map: {
+                        options: {
+                            "zoom": 5,
+                            "draggable": true,
+                            "mapTypeControl": true,
+                            "mapTypeId": google.maps.MapTypeId.ROADMAP,
+                            "scrollwheel": true,
+                            "panControl": true,
+                            "rotateControl": false,
+                            "scaleControl": true,
+                            "streetViewControl": false,
+                            "zoomControl": true,
+                            "keyboardShortcuts": true,
+                            "zoomControlOptions": {
+                                style: google.maps.ZoomControlStyle.SMALL,
+                            },
+
+                        }
+                    }
+                    ,marker: {
+                        values: [
+
+
+                            {
+                                latLng: [59.19248379445567,18.40555965900421],
+                                options: {
+                                    icon: "",
+                                    shadow: "",
+                                },
+                                data: '<div class="marker-wrapper  animated fadeInDown"><div class="marker-title"> <a href="http://www.sverigeforaren.se/klattring/dyviksudd/">Dyviksudd</a> </div><div class="marker-content"> <div class="two_third popup-content"><ul><li><span class="icon-direction"></span>Allmän information - Dyviksudd Kalkylerad fisk Foto: Jonas Ahlman 500m lång \"klippa\" uppdelad på fyra partier med ett 100-tal leder.&hellip;</li></ul></div> <div class="one_third last image-wrapper pop-image"><a href="http://www.sverigeforaren.se/klattring/dyviksudd/" title="Dyviksudd"> <img src="http://www.sverigeforaren.se/wp-content/uploads/2013/11/Dyviksudd-Lord-100x100.jpg" alt="Dyviksudd"/></a></div><div class="clearboth"></div><div class="linker"><a class="button black medium" href="http://www.sverigeforaren.se/klattring/dyviksudd/">Läs mer &raquo;</a></div> <div class="clearboth"></div> <div class="close"><span class="icon-cancel"></span></div></div><span class="icon-down-dir"></span></div>'
+                            },
+
+
+                            {
+                                latLng: [59.240144564503304,18.397196531295776],
+                                options: {
+                                    icon: "",
+                                    shadow: "",
+                                },
+                                data: '<div class="marker-wrapper  animated fadeInDown"><div class="marker-title"> <a href="http://www.sverigeforaren.se/klattring/agno/">Ägnö</a> </div><div class="marker-content"> <div class="two_third popup-content"><ul><li><span class="icon-direction"></span>Allmän information - Ägnö Foto: Ägnö. Foto: Jonas Ahlman Stor och kraftigt kuperad ö, norr om Härsö. Hela södra delen&hellip;</li></ul></div> <div class="one_third last image-wrapper pop-image"><a href="http://www.sverigeforaren.se/klattring/agno/" title="Ägnö"> <img src="http://www.sverigeforaren.se/wp-content/uploads/2013/11/Ägnö-2-100x100.jpg" alt="Ägnö"/></a></div><div class="clearboth"></div><div class="linker"><a class="button black medium" href="http://www.sverigeforaren.se/klattring/agno/">Läs mer &raquo;</a></div> <div class="clearboth"></div> <div class="close"><span class="icon-cancel"></span></div></div><span class="icon-down-dir"></span></div>'
+                            },
+                        ]
+                    }
+                }
+        )
+    })
+
+</script>
+
+</body>
+</html>
