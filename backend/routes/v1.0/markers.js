@@ -84,9 +84,9 @@ module.exports = function( server ) {
 
             // Create marker model, sanitize from mongodb sql injections and xss attacks
             var markerToSave = markerModel({
-                source: mongoSanitize(xssFilters.uriInHTMLData(marker.source)),
-                name: mongoSanitize(xssFilters.uriInHTMLData(marker.name)),
-                href: mongoSanitize(xssFilters.uriInHTMLData(marker.href)),
+                source: mongoSanitize(xssFilters.inHTMLData(marker.source)),
+                name: mongoSanitize(xssFilters.inHTMLData(marker.name)),
+                href: mongoSanitize(xssFilters.inHTMLData(marker.href)),
                 location: { // GeoJSON specific declaration
                     type: "Point",
                     coordinates: [marker.lon, marker.lat]
@@ -283,20 +283,6 @@ module.exports = function( server ) {
         else {
             displayError(res, next);
         }
-
-
-
-        /*
-        req.params.forEach(function(marker, index){
-
-
-
-            // Save marker
-            //saveMarker(marker, res, next);
-
-        });
-        */
-        // TODO: Implement multi marker posts
     })
 };
 

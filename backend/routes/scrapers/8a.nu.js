@@ -9,12 +9,13 @@ var cheerio = require('cheerio');
 var request = require('request');
 
 // Url to scrape
-var baseUrl = "http://www.sverigeforaren.se/";
-var urlToScrape = "http://www.sverigeforaren.se/search-results/?search_query=&tax_listings_categories=klippa&tax_listings_location=svealand&meta_listing_is_featured=&wpas=1";
+var baseUrl = "http://www.8a.nu/";
+var baseHrefUrl = "http://www.8a.nu/crags/";
+var urlToScrape = "http://www.8a.nu/crags/Map.aspx?CountryCode=GLOBAL";
 
 // Route strings setup
-var siteFullName = "Sverigeföraren";
-var siteName = "sverigeforaren";
+var siteFullName = "8a";
+var siteName = "8a";
 var baseRoute = "/scrapers/" + siteName;
 
 var targetApiAddress = "http://localhost:3000/v1.0/markers/multi";
@@ -22,43 +23,10 @@ var targetApiAddress = "http://localhost:3000/v1.0/markers/multi";
 // Create Scraper
 var scraperObj = new Scraper(baseUrl);
 
-/* ### Example response object
+/* ### Example response objects
  *  Markers are embedded in the html on the target page inside a script tag.
- {
-    latLng: [59.315073382079454,18.159622547885192],
-    options: {
-    icon: "",
-    shadow: "",
- },
-    data: '<div class="marker-wrapper  animated fadeInDown">
-            <div class="marker-title">
-                <a href="http://www.sverigeforaren.se/klattring/tandkulevagen/">Tändkulevägen</a>
-            </div>
-            <div class="marker-content">
-                <div class="two_third popup-content">
-                    <ul>
-                        <li><span class="icon-direction"></span>Allmän information - Tändkulevägen Klippan vid Nacka Strand är väldigt lös till sin karaktär varför det finns vissa bestämmelser kring&hellip;</li>
-                    </ul>
-                    </div>
-                    <div class="one_third last image-wrapper pop-image">
-                        <a href="http://www.sverigeforaren.se/klattring/tandkulevagen/" title="Tändkulevägen">
-                            <img src="http://www.sverigeforaren.se/wp-content/uploads/2013/12/no-picture-100x100.jpg" alt="Tändkulevägen"/>
-                        </a>
-                    </div>
-                    <div class="clearboth"></div>
-                    <div class="linker">
-                        <a class="button black medium" href="http://www.sverigeforaren.se/klattring/tandkulevagen/">
-                            Läs mer &raquo;
-                        </a>
-                    </div>
-                    <div class="clearboth"></div>
-                    <div class="close">
-                        <span class="icon-cancel"></span>
-                    </div>
-                </div>
-                <span class="icon-down-dir"></span>
-            </div>'
- }
+ L.marker([44.420901762813585, 33.916683197021484]).addTo(map).bindPopup('<a href=\'Crag.aspx?CragId=31291\'>&#1052;orchek&#1072;</a>    62 ascents');
+ L.marker([46.27625828810938, 14.964408874511719]).addTo(map).bindPopup('<a href=\'Crag.aspx?CragId=29286\'>&#268;reta</a>    998 ascents');
  */
 
 module.exports = function( server ) {
@@ -74,7 +42,7 @@ module.exports = function( server ) {
     server.get(baseRoute + "/getnew", function (req, res, next) {
 
         // Define an array that should contain parsed markers
-        var markersParsedArray;
+        var markerRawData;
         var markersToSaveArray = [];
 
         // Private methods
@@ -84,12 +52,12 @@ module.exports = function( server ) {
             var deferred = q.defer();
 
             // Scrape the url
-            scraperObj.getFileAsHtml("temp-data/sverigeforaren.se.html")
+            scraperObj.getFileAsHtml("temp-data/8a.nu.html")
             //scraperObj.getAsHtml(urlToScrape)
                 .then(function (doc) {
 
                     // Get markers raw data in script tag
-                    var markerRawData = doc('script:contains(",marker: {")').text();
+                    markerRawData = doc('script:contains("L.marker([")').text();
 
                     // Decode UTF8
                     //markerRawData = iconv.decode(markerRawData, "utf8");
@@ -98,14 +66,11 @@ module.exports = function( server ) {
                     markerRawData = markerRawData.replace(/(\r\n|\n|\r|\s\s+)/gm," ");
 
                     // Get start and end positions for marker data
-                    var jsonStart = markerRawData.indexOf("[");
-                    var jsonEnd = markerRawData.lastIndexOf("]") + 1;
+                    var toParseStart = markerRawData.indexOf("L.marker([");
+                    var toParseEnd = markerRawData.length;
 
                     // Get marker raw data
-                    markerRawData = markerRawData.substring(jsonStart, jsonEnd);
-
-                    // Parse dirty embedded javascript code to JSON
-                    markersParsedArray = scraperObj.parseNonStrictJson(markerRawData);
+                    markerRawData = markerRawData.substring(toParseStart, toParseEnd);
 
                     console.log("Page is parsed.");
 
@@ -127,29 +92,43 @@ module.exports = function( server ) {
 
         var parseValuesToArray = function() {
 
-            var markerToSave, aElem;
+            var dataRows, filteredDataRows, lat, lon, href, name, markerToSave;
 
-            markersParsedArray.forEach(function(elem, index){
+            // Split into rows
+            dataRows = markerRawData.split("L.marker");
+
+            // Remove accommodation-specific marker data and empty rows
+            filteredDataRows = dataRows.filter(function(value){
+                return (
+                    value.indexOf("icon: L.AwesomeMarkers.icon") === -1 && // Accommodation
+                    value.indexOf("[") > -1) ; // Empty rows
+            });
+
+            // Now we have rows with the following example data. Lets parse the data that we need.
+            // ([59.90024343415689, 10.856906175613403]).addTo(map).bindPopup('<a href=\'Crag.aspx?CragId=28809\'>Østmarka</a> 3 280 ascents');
+
+            // Parse each row
+            filteredDataRows.forEach(function(dataRow ,index){
 
                 // Parse data
-                $ = cheerio.load(elem.data);
-
-                // Get elements with data
-                aElem = $('a').first();
+                lat = /\[([\-0-9]+(\.[0-9]+)?),/g.exec(dataRow)[1];
+                lon = /\,\s([\-0-9]+(\.[0-9]+)?)\]\)/g.exec(dataRow)[1];
+                href = /a\shref\=\\\'([a-zA-Z0-9\?\=\.]+)\\\'/g.exec(dataRow)[1];
+                name = /\\\'\>([^\<]+)<\/a\>/g.exec(dataRow)[1];
 
                 // Put data in new marker object
                 markerToSave = {
                     source: siteFullName,
-                    name: aElem.text(),
-                    href: aElem.attr('href'),
-                    lon: elem.latLng[1],
-                    lat: elem.latLng[0]
+                    name: name,
+                    href: baseHrefUrl + href,
+                    lon: lon,
+                    lat: lat
                 };
 
                 markersToSaveArray.push(markerToSave);
             });
 
-            console.log("Elements are parsed.")
+            console.log("Elements are parsed.");
         };
 
         var postToApi = function (){
