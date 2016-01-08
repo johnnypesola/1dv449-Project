@@ -9,26 +9,26 @@
   )
 
   // Controller
-  .controller('MapCtrl', ["$scope", "$state", "$cordovaGeolocation", function ($scope, $state, $cordovaGeolocation) {
+  .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", function ($scope, $state, $q, mapHelper) {
 
-      var options = {timeout: 10000, enableHighAccuracy: true};
+    // Declare variables
 
-      $cordovaGeolocation.getCurrentPosition(options).then(function(position){
 
-        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+    // Public methods
 
-        var mapOptions = {
-          center: latLng,
-          zoom: 15,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
 
-        $scope.map = new google.maps.Map(document.getElementById("map"), mapOptions);
+    // Init code
+      mapHelper.loadGoogleMaps()
+        .then(function(){
+          mapHelper.addMarkerToMap(59.32893, 18.06491)
+            .then(function(markerObj) {
+              mapHelper.addInfoWindow("This is some content", markerObj, "click");
+            });
 
-      }, function(error){
-        console.log("Could not get location");
+          mapHelper.addMarkerToMap(59.98914, 15.81664);
+
+
       });
-
-    }]);
+  }]);
 })();
 

@@ -24,7 +24,8 @@
     'Climbspotter.map',
     'Climbspotter.layers',
     'Climbspotter.settings',
-    'Climbspotter.chatServices'
+    'Climbspotter.chatServices',
+    'Climbspotter.mapHelperService'
   ]);
 
   Climbspotter.run(['$ionicPlatform', function($ionicPlatform) {
