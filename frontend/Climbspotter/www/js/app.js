@@ -26,7 +26,9 @@
     'Climbspotter.settings',
     'Climbspotter.chatServices',
     'Climbspotter.mapHelperService',
-    'Climbspotter.dbBaseService'
+    'Climbspotter.dbBaseService',
+    'Climbspotter.markersService',
+    'Climbspotter.8aMarkersRepoService'
   ]);
 
   Climbspotter.run(['$ionicPlatform', 'dbBase', '$rootScope', function($ionicPlatform, dbBase, $rootScope) {
