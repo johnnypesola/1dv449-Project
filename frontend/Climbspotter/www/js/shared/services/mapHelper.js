@@ -6,10 +6,10 @@
     angular.module('Climbspotter.mapHelperService',
 
         // Dependencies
-        []
+        ['ngMap']
         )
 
-        .service('mapHelper', ["$q", "$cordovaGeolocation", function ($q, $cordovaGeolocation) {
+        .service('mapHelper', ["$q", "$cordovaGeolocation", "NgMap", function ($q, $cordovaGeolocation, NgMap) {
 
           // Init vars
             var that = this;
@@ -18,6 +18,7 @@
           // Service properties
             that.userPosition = {coords : { latitude: 0, longitude: 0 }};
             that.map = {};
+            that.defaultZoom = 15;
 
           // Service methods
             that.loadGoogleMaps = function() {
@@ -27,6 +28,10 @@
                 // Create promise
                 deferred = $q.defer();
 
+                // Load maps
+                NgMap.getMap().then(function(map){
+                    that.map = map;
+
                     that.updateUserPosition()
                         // All went good
                         .then(function(){
@@ -34,25 +39,23 @@
                             // Create maps specific coordinate object
                             latLng = new google.maps.LatLng(that.userPosition.coords.latitude, that.userPosition.coords.longitude);
 
-                            mapOptions = {
-                                center: latLng,
-                                zoom: 15,
-                                mapTypeId: google.maps.MapTypeId.ROADMAP
-                            };
-
-                            that.map = new google.maps.Map(document.getElementById("map"), mapOptions);
+                            that.map.setCenter(latLng);
+                            that.map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+                            that.map.setZoom(that.defaultZoom);
 
                             // Resolve promise
                             deferred.resolve();
                         })
+
                         // An error occured
                         .catch(function(msg){
 
-                          deferred.reject(msg)
-                      });
+                            deferred.reject(msg)
+                        });
+                });
 
-                  // Return promise
-                  return deferred.promise;
+                // Return promise
+                return deferred.promise;
             };
 
             that.addMarkerToMap = function(lat, lng){

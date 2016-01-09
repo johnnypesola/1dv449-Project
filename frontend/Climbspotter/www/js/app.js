@@ -25,10 +25,11 @@
     'Climbspotter.layers',
     'Climbspotter.settings',
     'Climbspotter.chatServices',
-    'Climbspotter.mapHelperService'
+    'Climbspotter.mapHelperService',
+    'Climbspotter.dbBaseService'
   ]);
 
-  Climbspotter.run(['$ionicPlatform', function($ionicPlatform) {
+  Climbspotter.run(['$ionicPlatform', 'dbBase', '$rootScope', function($ionicPlatform, dbBase, $rootScope) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
@@ -41,6 +42,10 @@
         // org.apache.cordova.statusbar required
         StatusBar.styleDefault();
       }
+
+        // Initialize local database for caching
+        dbBase.initDb();
+
     });
   }]);
 
