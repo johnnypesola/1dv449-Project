@@ -56,8 +56,6 @@ module.exports = function( server ) {
 
                     console.log("Started parsing page. " + doc.length);
 
-                    //console.log(doc);
-
                     // Get markers raw data in script tag
                     markerRawData = doc('script:contains("L.marker([")').text();
 
@@ -131,8 +129,6 @@ module.exports = function( server ) {
 
                 markersToSaveArray.push(markerToSave);
             });
-
-            console.log("Elements are parsed: " + markersToSaveArray.length);
         };
 
         var postToApi = function (){

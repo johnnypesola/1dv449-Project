@@ -16,8 +16,8 @@ server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
 // Start server
-server.listen(3000, function () {
-    console.log("Server started @ 3000");
+server.listen(8100, function () {
+    console.log("Server started @ 8100");
 });
 
 // Require routes / endpoints
