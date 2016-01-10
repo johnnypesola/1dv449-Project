@@ -11,69 +11,81 @@
   // Controller
   .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
 
-    // Declare variables
-    var markerObjArray = [];
+      // Declare variables
+      var markerObjArray = [];
 
-    // Private methods
-    var getMarkers = function(){
+      $scope.markersArray = [];
+      $scope.activeMarker = {};
 
-        // Create promise
-        var deferred = $q.defer();
+      // Private methods
+      var getMarkers = function(){
 
-        Markers.getAllServiceMarkersNear(
-            {
-                lat: mapHelper.userPosition.coords.latitude,
-                lng: mapHelper.userPosition.coords.longitude
-            }
-        ).then(function(markers){
+          // Create promise
+          var deferred = $q.defer();
 
-            // Store markers in array
-            markerObjArray = markers;
+          Markers.getAllMarkersNear(
+              {
+                  lat: mapHelper.userPosition.coords.latitude,
+                  lng: mapHelper.userPosition.coords.longitude
+              }
+          ).then(function(markers){
 
-            // Resolve promise
-            deferred.resolve();
-        });
+              // Store markers in array
+              markerObjArray = markers;
 
-        // Return promise
-        return deferred.promise;
-    };
-
-    var addMarkersToMap = function(){
-
-        markerObjArray.forEach(function(marker){
-
-            mapHelper.addMarkerToMap(marker.obj.location.coordinates[1], marker.obj.location.coordinates[0])
-                .then(function(marker) {
-                    mapHelper.addInfoWindow("This is some content", marker, "click");
-                });
-        })
-    };
-
-    // Public methods
-
-
-    // Init code
-
-      mapHelper.loadGoogleMaps()
-        .then(function(){
-
-          getMarkers().then(function(){
-
-              addMarkersToMap();
+              // Resolve promise
+              deferred.resolve();
           });
 
+          // Return promise
+          return deferred.promise;
+      };
 
-          /*
-          mapHelper.addMarkerToMap(59.32893, 18.06491)
-            .then(function(markerObj) {
-              mapHelper.addInfoWindow("This is some content", markerObj, "click");
-            });
+      var addMarkersToMap = function(){
 
-          mapHelper.addMarkerToMap(59.98914, 15.81664)
-            .then(function(markerObj) {
-              mapHelper.addInfoWindow("This is Fagersta.", markerObj, "click");
-            });
-          */
+          var displayContent;
+
+          markerObjArray.forEach(function(markerObj){
+
+              mapHelper.addMarkerToMap(markerObj.obj.location.coordinates[1], markerObj.obj.location.coordinates[0], function(){
+
+                  $scope.activeMarker = markerObj;
+
+              });
+          })
+      };
+
+      // Public methods
+
+      $scope.showMarkerInfo = function(event, marker){
+
+          // Set active marker
+          $scope.activeMarker = marker;
+
+          // Display info google maps window
+          mapHelper.showInfoWindow(marker.obj._id);
+
+      };
+
+      $scope.openActiveMarkerWwwSource = function(){
+
+          window.open($scope.activeMarker.obj.href);
+      };
+
+      // Init code
+      mapHelper.loadGoogleMaps()
+          .then(function(){
+
+              getMarkers().then(function(){
+
+                  addMarkersToMap();
+                  $scope.markersArray = markerObjArray;
+
+                  mapHelper.startTrackingUserPosition();
+
+                  //console.log($scope.markersArray);
+
+              });
 
       });
   }]);

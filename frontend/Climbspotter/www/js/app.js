@@ -28,7 +28,8 @@
     'Climbspotter.mapHelperService',
     'Climbspotter.dbBaseService',
     'Climbspotter.markersService',
-    'Climbspotter.8aMarkersRepoService'
+    'Climbspotter.8aMarkersRepoService',
+    'Climbspotter.sverigeforarenMarkersRepoService'
   ]);
 
   Climbspotter.run(['$ionicPlatform', 'dbBase', '$rootScope', function($ionicPlatform, dbBase, $rootScope) {

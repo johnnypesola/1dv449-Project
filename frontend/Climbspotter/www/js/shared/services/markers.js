@@ -14,11 +14,19 @@
           /* Init vars */
           var that = this;
 
+          that.markerObjArray = [];
+
           // Declare services
           var markerServicesArray = [
               {
                   name: "8a",
                   initName: "8aMarkersRepo",
+                  enabled:  true,
+                  reference: {}
+              },
+              {
+                  name: "Sverigeföraren",
+                  initName: "sverigeforarenMarkersRepo",
                   enabled:  true,
                   reference: {}
               }
@@ -33,6 +41,37 @@
                   // Inject and store reference.
                   service.reference = $injector.get(service.initName);
               })
+          };
+
+          var fetchAllServiceMarkersNear = function(latLongObj){
+
+              var loopPromisesArray = [],
+                  servicesArray;
+
+                  // Clear old markerdata
+                  that.markerObjArray = [];
+
+                  // Get all markers from enabled services. And concatinate into one array.
+                  servicesArray = that.getEnabledServices();
+
+                  servicesArray.forEach(function(service){
+                      var loopDeferred = $q.defer();
+
+                      service.reference.getAllNear(latLongObj)
+                          .then(function(markersArray){
+
+                              that.markerObjArray = that.markerObjArray.concat(markersArray);
+
+                              // Resolve iterational promise
+                              loopDeferred.resolve();
+                          });
+
+                      // Store this iteration promise
+                      loopPromisesArray.push(loopDeferred.promise);
+                  });
+
+              // Return promises
+              return $q.all(loopPromisesArray);
           };
 
           /* Private Methods END */
@@ -81,25 +120,15 @@
               serviceToEnable.enabled = true;
           };
 
-          that.getAllServiceMarkersNear = function(latLongObj){
-
-              var returnMarkersArray = [],
-                  deferred;
+          that.getAllMarkersNear = function(latLongObj){
 
               // Create promise
-              deferred = $q.defer();
+              var deferred = $q.defer();
 
-              // Get all markers from enabled services. And concatinate into one array.
-              that.getEnabledServices().forEach(function(service){
-
-                  service.reference.getAllNear(latLongObj)
-                      .then(function(markersArray){
-                          returnMarkersArray = returnMarkersArray.concat(markersArray);
-
-                          // Resolve promise
-                          deferred.resolve(returnMarkersArray);
-                      })
-              });
+              fetchAllServiceMarkersNear(latLongObj)
+                  .then(function(){
+                      deferred.resolve(that.markerObjArray);
+                  });
 
               // Return promise
               return deferred.promise;

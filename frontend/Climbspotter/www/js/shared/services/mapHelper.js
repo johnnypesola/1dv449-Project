@@ -11,16 +11,50 @@
 
         .service('mapHelper', ["$q", "$cordovaGeolocation", "NgMap", function ($q, $cordovaGeolocation, NgMap) {
 
-          // Init vars
+          /* Init vars */
             var that = this;
             var getGpsPosOptions = {timeout: 10000, enableHighAccuracy: true};
+            var userPositionWatch;
+            var userMarker;
+            var userMarkerImg = "img/user_marker.png";
 
           // Service properties
             that.userPosition = {coords : { latitude: 0, longitude: 0 }};
             that.map = {};
-            that.defaultZoom = 15;
+            that.defaultZoom = 6;
 
-          // Service methods
+          /* Private methods START */
+
+            var updateUserMarker = function(){
+
+                var latLng, marker;
+
+                // Create google LatLng obj
+                latLng = new google.maps.LatLng(
+                    that.userPosition.coords.latitude,
+                    that.userPosition.coords.longitude
+                );
+
+                // Create marker on map if needed
+                if(userMarker == null){
+
+                    // Create marker on map
+                    userMarker = new google.maps.Marker({
+                        map: that.map,
+                        position: latLng,
+                        icon: userMarkerImg
+                    });
+                }
+                // Update position
+                else {
+                    userMarker.position = latLng;
+                }
+            };
+
+          /* Private methods END */
+
+          /* Public Methods START */
+
             that.loadGoogleMaps = function() {
 
                 var deferred, latLng, mapOptions;
@@ -58,7 +92,7 @@
                 return deferred.promise;
             };
 
-            that.addMarkerToMap = function(lat, lng){
+            that.addMarkerToMap = function(lat, lng, clickCallBack){
                 var marker, latLng, deferred;
 
                 // Create promise
@@ -72,11 +106,20 @@
 
                     // Create marker on map
                     marker = new google.maps.Marker({
-                      map: that.map,
-                      position: latLng
+                        map: that.map,
+                        position: latLng
                     });
 
-                    // Resolve with marker object.
+                    // Create mousedown event for marker
+                    google.maps.event.addListener(marker, 'mousedown', function() {
+
+                        that.showInfoWindow(marker);
+
+                        // Execute callback
+                        clickCallBack();
+                    });
+
+                    // Resolve with google marker object.
                     deferred.resolve(marker);
                 });
 
@@ -93,11 +136,15 @@
 
                 $cordovaGeolocation.getCurrentPosition(getGpsPosOptions).then(function(position){
 
-                    // Update position
+                    // Update user position
                     that.userPosition = position;
 
                     // Resolve promise
                     deferred.resolve();
+
+                    // Update user marker on map
+                    updateUserMarker();
+
                 }, function(error) {
 
                     // Reject promise
@@ -108,21 +155,41 @@
                 return deferred.promise;
             };
 
-            that.addInfoWindow = function(contentStr, markerObj, eventStr) {
+            that.startTrackingUserPosition = function(){
 
-                // eventStr can be click, and so on...
+                // Watch options
+                var watchOptions = {
+                    timeout : 5000,
+                    enableHighAccuracy: false // may cause errors if true
+                };
 
-                var infoWindow;
+                userPositionWatch = $cordovaGeolocation.watchPosition(watchOptions);
+                userPositionWatch.then(
+                    null,
+                    function(err) {
 
-                // Create infoWindow
-                infoWindow = new google.maps.InfoWindow({
-                    content: contentStr
-                });
+                    },
+                    function(position) {
 
-                // Add infoWindow to marker
-                google.maps.event.addListener(markerObj, eventStr, function () {
-                    infoWindow.open(that.map, markerObj);
-                });
+                        // Update user position
+                        that.userPosition = position;
+
+                        // Update user marker on map
+                        updateUserMarker();
+                    }
+                );
             };
+
+            that.stopTrackingUserPosition = function(){
+                userPositionWatch.clearWatch();
+            };
+
+            that.showInfoWindow = function(id) {
+
+                that.map.showInfoWindow('marker-info', id);
+            };
+
+          /* Public Methods END */
+
         }]);
 })();
