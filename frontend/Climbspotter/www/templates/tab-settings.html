@@ -1,5 +1,8 @@
 <ion-view view-title="Settings">
   <ion-content>
-    {{testVar}} <- testvar
+
+    <ion-toggle toggle-class="toggle-calm" ng-model="isTrackingUserPosition" ng-click="toggleTracking(isTrackingUserPosition)">
+      Track device GPS position
+    </ion-toggle>
   </ion-content>
 </ion-view>

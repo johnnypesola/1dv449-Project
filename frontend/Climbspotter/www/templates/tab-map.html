@@ -1,12 +1,9 @@
 <ion-view view-title="Map">
   <ion-content>
-    <map center="" zoom="3" single-info-window="true">
-      <!-- <marker
-          ng-repeat="marker in markersArray"
-          id="{{marker.obj._id}}"
-          position="[{{marker.obj.location.coordinates[1]}}, {{marker.obj.location.coordinates[0]}}]"
-          on-click="showMarkerInfo(marker)">
-      </marker> -->
+    <map center="" zoom="2" single-info-window="true">
+
+      <!-- Markers are added in mapHelper service -->
+
       <info-window id="marker-info">
         <div ng-non-bindable="" class="marker-info-container">
           <button class="button icon-right ion-android-open button-dark button-small" ng-click="openActiveMarkerWwwSource()">{{activeMarker.obj.name}}<br>
@@ -14,6 +11,7 @@
           </button>
         </div>
       </info-window>
+
     </map>
   </ion-content>
 </ion-view>

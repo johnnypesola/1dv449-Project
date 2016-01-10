@@ -91,6 +91,10 @@
               return returnServiceArray;
           };
 
+          that.getServices = function(){
+              return markerServicesArray;
+          };
+
           that.disableService = function(serviceName){
 
               var serviceToDisable;

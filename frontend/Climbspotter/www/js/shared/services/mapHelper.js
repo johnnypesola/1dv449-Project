@@ -17,8 +17,13 @@
             var userPositionWatch;
             var userMarker;
             var userMarkerImg = "img/user_marker.png";
+            var userMarkerLastLocImg = "img/user_marker_last_loc.png";
+            var isTrackingUserPosition = false;
 
-          // Service properties
+            // Keep track of google map Markers, these are the actual ones visible on the map.
+            var googleMapMarkers = [];
+
+            // Service properties
             that.userPosition = {coords : { latitude: 0, longitude: 0 }};
             that.map = {};
             that.defaultZoom = 6;
@@ -41,8 +46,7 @@
                     // Create marker on map
                     userMarker = new google.maps.Marker({
                         map: that.map,
-                        position: latLng,
-                        icon: userMarkerImg
+                        position: latLng
                     });
                 }
                 // Update position
@@ -92,14 +96,18 @@
                 return deferred.promise;
             };
 
-            that.addMarkerToMap = function(lat, lng, clickCallBack){
+            that.addMarkerToMap = function(lat, lng, waitUntilMapsIsIdle, clickCallBack){
+
                 var marker, latLng, deferred;
+
+                // Conditional argument
+                waitUntilMapsIsIdle = (typeof waitUntilMapsIsIdle === 'undefined') ? true : waitUntilMapsIsIdle;
 
                 // Create promise
                 deferred = $q.defer();
 
-                // When google maps is idle
-                google.maps.event.addListenerOnce(that.map, 'idle', function(){
+                // Internal function
+                var addMarker = function(){
 
                     // Create google LatLng obj
                     latLng = new google.maps.LatLng(lat, lng);
@@ -119,12 +127,41 @@
                         clickCallBack();
                     });
 
+                    // Push marker to array.
+                    googleMapMarkers.push(marker);
+
                     // Resolve with google marker object.
                     deferred.resolve(marker);
-                });
+                };
+
+                // Wait
+                if(waitUntilMapsIsIdle) {
+
+                    // When google maps is idle
+                    google.maps.event.addListenerOnce(that.map, 'idle', function(){
+
+                        addMarker();
+                    });
+                }
+                // Dont wait
+                else {
+                    addMarker();
+                }
 
                 // Return promise
                 return deferred.promise;
+            };
+
+            that.clearMarkers = function(markerObjArray){
+
+                googleMapMarkers.forEach(function(marker){
+
+                    marker.setMap(null);
+
+                });
+
+                // Reset container array
+                googleMapMarkers = [];
             };
 
             that.updateUserPosition = function(){
@@ -163,12 +200,14 @@
                     enableHighAccuracy: false // may cause errors if true
                 };
 
+                // Start tracking user position
                 userPositionWatch = $cordovaGeolocation.watchPosition(watchOptions);
                 userPositionWatch.then(
                     null,
                     function(err) {
 
                     },
+                    // It went well
                     function(position) {
 
                         // Update user position
@@ -176,12 +215,28 @@
 
                         // Update user marker on map
                         updateUserMarker();
+
+                        // Set flag
+                        isTrackingUserPosition = true;
+
+                        // Set last now tracking icon
+                        userMarker.setIcon(userMarkerImg);
                     }
                 );
             };
 
             that.stopTrackingUserPosition = function(){
+
                 userPositionWatch.clearWatch();
+
+                // Set last location icon
+                userMarker.setIcon(userMarkerLastLocImg);
+
+                isTrackingUserPosition = false;
+            };
+
+            that.isTrackingUserPosition = function(){
+                return isTrackingUserPosition;
             };
 
             that.showInfoWindow = function(id) {
