@@ -94,8 +94,23 @@ module.exports = function( server ) {
 
         var lat = parseFloat(req.query.lat),
             lon = parseFloat(req.query.lon),
+            dis = parseFloat(req.query.dis),
+            src = req.query.src,
             earthsRadius = 6371,
-            distanceInKiloMeters = 1/earthsRadius;
+            distanceInKiloMeters = 10/earthsRadius;
+
+        // Optinal distance parameter check.
+        if(dis !== null && validator.isInt(dis, {min: 1, max: 100})){
+            distanceInKiloMeters = dis/earthsRadius;
+        }
+
+        // Optinal src parameter check
+        if(src !== null && validator.whitelist(src, ".@a-zA-Z0-9À-ÖØ-öø-ÿ")){
+            src = mongoSanitize(src);
+        }
+        else {
+            src = null;
+        }
 
 
         // Required parameters check
@@ -105,13 +120,15 @@ module.exports = function( server ) {
 
             lon !== null &&
             validator.isFloat(lon, {min: -180, max: 180})
+
         ) {
 
             // Get near markers from database
             MarkerDAL.geoNear([lon, lat], {
                 maxDistance: distanceInKiloMeters,
                 spherical : true,
-                distanceField: "distance"
+                distanceField: "distance",
+                query: ( src === null ? null : { source: src })
             }, function(error, results){
 
                 if(error) {
