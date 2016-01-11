@@ -1,7 +1,7 @@
 /**
  * Created by jopes on 2016-01-08.
  */
-(function() {
+(function () {
     // Declare module
     angular.module('Climbspotter.mapHelperService',
 
@@ -11,28 +11,138 @@
 
         .service('mapHelper', ["$q", "$cordovaGeolocation", "NgMap", function ($q, $cordovaGeolocation, NgMap) {
 
-          /* Init vars */
+            /* Init vars */
             var that = this;
             var getGpsPosOptions = {timeout: 10000, enableHighAccuracy: true};
             var userPositionWatch;
             var userMarker;
-            var userMarkerImg = "img/user_marker.png";
-            var userMarkerLastLocImg = "img/user_marker_last_loc.png";
             var isTrackingUserPosition = false;
 
             // Keep track of google map Markers, these are the actual ones visible on the map.
             var googleMapMarkers = [];
 
+            // Marker icon image specs
+            var markerIcons = {
+
+                user: {
+                    url: 'img/user_marker.png',
+                    size: new google.maps.Size(32, 32),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(16, 16)
+                },
+                user_pirate: {
+                    url: 'img/user_marker_pirate.png',
+                    size: new google.maps.Size(29, 45),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(15, 45)
+                },
+                userDisabled: {
+                    url: 'img/user_marker_last_loc.png',
+                    size: new google.maps.Size(64, 64),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(16, 16)
+                },
+                userDisabled_pirate: {
+                    url: 'img/user_marker_last_loc_pirate.png',
+                    size: new google.maps.Size(41, 34),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(20, 18)
+                },
+                climbing: {
+                    url: 'img/marker_climbing.png',
+                    size: new google.maps.Size(22, 32),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(11, 32)
+                },
+                climbing_pirate: {
+                    url: 'img/marker_pirate.png',
+                    size: new google.maps.Size(32, 24),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(16, 24)
+                }
+            };
+
+            // Map presentation styles
+            var mapStyles = {
+                normal: {
+                    styles: []
+                },
+                pirate: {
+                    styles: [
+                        {
+                            stylers: [
+                                {hue: "#1900ff"},
+                                {invert_lightness: true},
+                                {weight: 0.5}
+                            ]
+                        }
+                    ]
+                }
+            };
+
             // Service properties
-            that.userPosition = {coords : { latitude: 0, longitude: 0 }};
+            that.userPosition = {coords: {latitude: 0, longitude: 0}};
             that.map = {};
             that.defaultZoom = 6;
+            that.isPirateMode = false;
+            that.markerClickCallbackFunc = function(){};
 
-          /* Private methods START */
+            /* Private methods START */
+            var makeIcon = function (iconType) {
 
-            var updateUserMarker = function(){
+                // Pirate mode! check
+                if (that.isPirateMode) {
+                    iconType += '_pirate';
+                }
 
-                var latLng, marker;
+                return {
+                    url: markerIcons[iconType].url,
+                    size: markerIcons[iconType].size,
+                    origin: markerIcons[iconType].origin,
+                    anchor: markerIcons[iconType].anchor
+                }
+            };
+
+            var addMarkerTouchEvent = function(marker, dbMarkerObj){
+
+                google.maps.event.addListener(marker, 'mousedown', function () {
+
+                    // Show info window
+                    that.showInfoWindow(marker);
+
+                    // Execute marker click callback, probably defined in mapCtrl
+                    that.markerClickCallbackFunc(dbMarkerObj);
+                })
+            };
+
+            var createMapMarker = function(dbMarkerObj, typeString){
+
+                var marker = new google.maps.Marker({
+                    map: that.map,
+                    position: new google.maps.LatLng(dbMarkerObj.lat, dbMarkerObj.lng), // Create google LatLng obj
+                    icon: makeIcon(typeString)
+                });
+
+                return marker;
+            };
+
+            /* Private methods END */
+
+            /* Public Methods START */
+
+            that.getCenter = function(){
+
+                var center = that.map.getCenter();
+
+                return {
+                    lat: center.lat(),
+                    lng: center.lng()
+                };
+            };
+
+            that.updateUserMarker = function () {
+
+                var latLng, icon;
 
                 // Create google LatLng obj
                 latLng = new google.maps.LatLng(
@@ -40,26 +150,39 @@
                     that.userPosition.coords.longitude
                 );
 
+                // Create icon
+                icon = makeIcon(isTrackingUserPosition ? "user" : "userDisabled");
+
                 // Create marker on map if needed
-                if(userMarker == null){
+                if (userMarker == null) {
 
                     // Create marker on map
                     userMarker = new google.maps.Marker({
                         map: that.map,
-                        position: latLng
+                        position: latLng,
+                        icon: icon
                     });
                 }
                 // Update position
                 else {
                     userMarker.position = latLng;
+
+                    // Update icon
+                    userMarker.setIcon(icon);
                 }
             };
 
-          /* Private methods END */
+            that.updateMapStyle = function () {
 
-          /* Public Methods START */
+                var style;
 
-            that.loadGoogleMaps = function() {
+                // Pirate mode! check
+                style = that.isPirateMode ? mapStyles.pirate : mapStyles.normal;
+
+                that.map.setOptions(style);
+            };
+
+            that.loadGoogleMaps = function () {
 
                 var deferred, latLng, mapOptions;
 
@@ -67,12 +190,16 @@
                 deferred = $q.defer();
 
                 // Load maps
-                NgMap.getMap().then(function(map){
-                    that.map = map;
+
+                // Wait until the map is ready status.
+                $rootScope.map.addEventListener(plugin.google.maps.event.MAP_READY, function () {
+
+                    //that.map = map;
 
                     that.updateUserPosition()
+
                         // All went good
-                        .then(function(){
+                        .then(function () {
 
                             // Create maps specific coordinate object
                             latLng = new google.maps.LatLng(that.userPosition.coords.latitude, that.userPosition.coords.longitude);
@@ -86,75 +213,58 @@
                         })
 
                         // An error occured
-                        .catch(function(msg){
+                        .catch(function (msg) {
 
                             deferred.reject(msg)
                         });
                 });
+                */
 
                 // Return promise
                 return deferred.promise;
             };
 
-            that.addMarkerToMap = function(lat, lng, waitUntilMapsIsIdle, clickCallBack){
+            that.addMarkerToMap = function (dbMarkerObj) {
 
-                var marker, latLng, deferred;
-
-                // Conditional argument
-                waitUntilMapsIsIdle = (typeof waitUntilMapsIsIdle === 'undefined') ? true : waitUntilMapsIsIdle;
+                var marker, deferred;
 
                 // Create promise
                 deferred = $q.defer();
 
-                // Internal function
-                var addMarker = function(){
+                if(!googleMapMarkers.some(function(existingMarker){
 
-                    // Create google LatLng obj
-                    latLng = new google.maps.LatLng(lat, lng);
+                        var existingMarkerPos = existingMarker.getPosition();
 
+                        return (
+                            existingMarkerPos.lat() == dbMarkerObj.lat &&
+                            existingMarkerPos.lng() == dbMarkerObj.lng
+                        )
+                    })
+                ){
                     // Create marker on map
-                    marker = new google.maps.Marker({
-                        map: that.map,
-                        position: latLng
-                    });
+                    marker = createMapMarker(dbMarkerObj, "climbing");
 
                     // Create mousedown event for marker
-                    google.maps.event.addListener(marker, 'mousedown', function() {
-
-                        that.showInfoWindow(marker);
-
-                        // Execute callback
-                        clickCallBack();
-                    });
+                    addMarkerTouchEvent(marker, dbMarkerObj);
 
                     // Push marker to array.
                     googleMapMarkers.push(marker);
 
                     // Resolve with google marker object.
                     deferred.resolve(marker);
-                };
-
-                // Wait
-                if(waitUntilMapsIsIdle) {
-
-                    // When google maps is idle
-                    google.maps.event.addListenerOnce(that.map, 'idle', function(){
-
-                        addMarker();
-                    });
                 }
-                // Dont wait
+                // Marker already exists on map
                 else {
-                    addMarker();
+                    deferred.reject();
                 }
 
                 // Return promise
                 return deferred.promise;
             };
 
-            that.clearMarkers = function(markerObjArray){
+            that.clearMarkers = function (markerObjArray) {
 
-                googleMapMarkers.forEach(function(marker){
+                googleMapMarkers.forEach(function (marker) {
 
                     marker.setMap(null);
 
@@ -164,14 +274,14 @@
                 googleMapMarkers = [];
             };
 
-            that.updateUserPosition = function(){
+            that.updateUserPosition = function () {
 
                 var deferred;
 
                 // Create promise
                 deferred = $q.defer();
 
-                $cordovaGeolocation.getCurrentPosition(getGpsPosOptions).then(function(position){
+                $cordovaGeolocation.getCurrentPosition(getGpsPosOptions).then(function (position) {
 
                     // Update user position
                     that.userPosition = position;
@@ -180,9 +290,9 @@
                     deferred.resolve();
 
                     // Update user marker on map
-                    updateUserMarker();
+                    that.updateUserMarker();
 
-                }, function(error) {
+                }, function (error) {
 
                     // Reject promise
                     deferred.reject("Could not get user position.")
@@ -192,11 +302,11 @@
                 return deferred.promise;
             };
 
-            that.startTrackingUserPosition = function(){
+            that.startTrackingUserPosition = function () {
 
                 // Watch options
                 var watchOptions = {
-                    timeout : 5000,
+                    timeout: 5000,
                     enableHighAccuracy: false // may cause errors if true
                 };
 
@@ -204,47 +314,50 @@
                 userPositionWatch = $cordovaGeolocation.watchPosition(watchOptions);
                 userPositionWatch.then(
                     null,
-                    function(err) {
+                    function (err) {
 
                     },
                     // It went well
-                    function(position) {
+                    function (position) {
 
                         // Update user position
                         that.userPosition = position;
 
-                        // Update user marker on map
-                        updateUserMarker();
-
                         // Set flag
                         isTrackingUserPosition = true;
 
-                        // Set last now tracking icon
-                        userMarker.setIcon(userMarkerImg);
+                        // Update user marker on map
+                        that.updateUserMarker();
                     }
                 );
             };
 
-            that.stopTrackingUserPosition = function(){
+            that.stopTrackingUserPosition = function () {
 
                 userPositionWatch.clearWatch();
 
-                // Set last location icon
-                userMarker.setIcon(userMarkerLastLocImg);
-
                 isTrackingUserPosition = false;
+
+                that.updateUserMarker();
             };
 
-            that.isTrackingUserPosition = function(){
+            that.isTrackingUserPosition = function () {
                 return isTrackingUserPosition;
             };
 
-            that.showInfoWindow = function(id) {
+            that.showInfoWindow = function (id) {
 
                 that.map.showInfoWindow('marker-info', id);
             };
 
-          /* Public Methods END */
+            that.doOnDragEnd = function(callBack){
+
+
+                google.maps.event.addListener(that.map, 'tilesloaded', callBack);
+
+            };
+
+            /* Public Methods END */
 
         }]);
 })();

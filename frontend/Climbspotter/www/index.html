@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title></title>
@@ -27,10 +27,6 @@
     <script src="http://maps.google.com/maps/api/js?key=AIzaSyDNNKBnpsHLUYTdxQWzbtLQHabEKvhrYFE&sensor=true"></script>
     <script src="lib/ng-map.min.js"></script>
 
-    <script src="js/controllers/account/accountCtrl.js"></script>
-    <script src="js/controllers/chats/chatDetailCtrl.js"></script>
-    <script src="js/controllers/chats/chatsCtrl.js"></script>
-    <script src="js/controllers/dash/dashCtrl.js"></script>
     <script src="js/controllers/map/mapCtrl.js"></script>
     <script src="js/controllers/layers/layersCtrl.js"></script>
     <script src="js/controllers/settings/settingsCtrl.js"></script>
@@ -42,23 +38,29 @@
     <script src="js/shared/services/markers.js"></script>
     <script src="js/shared/services/8aMarkersRepo.js"></script>
     <script src="js/shared/services/sverigeforarenRepo.js"></script>
+    <script src="js/shared/services/stfRepo.js"></script>
+    <script src="js/shared/services/geocoder.js"></script>
 
-  </head>
-  <body ng-app="Climbspotter">
-    <!--
-      The nav bar that will be updated as we navigate between views.
-    -->
+    <!-- Models -->
+    <script src="js/shared/models/dbMarker.js"></script>
 
-    <ion-nav-bar class="calm" align-title="center">
-      <ion-nav-back-button>
-      </ion-nav-back-button>
+</head>
+<body ng-app="Climbspotter">
+<!--
+  The nav bar that will be updated as we navigate between views.
+-->
 
-    </ion-nav-bar>
-    <!--
-      The views will be rendered in the <ion-nav-view> directive below
-      Templates are in the /templates folder (but you could also
-      have templates inline in this html file if you'd like).
-    -->
-    <ion-nav-view></ion-nav-view>
-  </body>
+<ion-nav-bar class="calm" align-title="center">
+    <ion-nav-back-button>
+    </ion-nav-back-button>
+
+</ion-nav-bar>
+<!--
+  The views will be rendered in the <ion-nav-view> directive below
+  Templates are in the /templates folder (but you could also
+  have templates inline in this html file if you'd like).
+-->
+
+<ion-nav-view></ion-nav-view>
+</body>
 </html>

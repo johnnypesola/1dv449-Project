@@ -1,56 +1,70 @@
 'use strict';
 
-(function() {
+(function () {
 
-  angular.module('Climbspotter.settings',
+    angular.module('Climbspotter.settings',
 
-    // Dependencies
-    []
-    )
+        // Dependencies
+        []
+        )
 
-    // Controller
-    .controller('SettingsCtrl', ["$scope", "$state", "mapHelper", function ($scope, $state, mapHelper) {
+        // Controller
+        .controller('SettingsCtrl', ["$scope", "$state", "mapHelper", "geocoder", function ($scope, $state, mapHelper, geocoder) {
 
-        /* Init vars */
-        var controllerStateName = "tab.settings";
+            /* Init vars */
+            var controllerStateName = "tab.settings";
 
-        /* Private methods START */
+            /* Private methods START */
 
-        var getSettings = function(){
-            $scope.isTrackingUserPosition = mapHelper.isTrackingUserPosition();
-        };
+            var getSettings = function () {
+                $scope.isTrackingUserPosition = mapHelper.isTrackingUserPosition();
+                $scope.isPirateMode = mapHelper.isPirateMode;
+            };
 
-        /* Private Methods END */
+            /* Private Methods END */
 
-        /* Public Methods START */
+            /* Public Methods START */
 
-        $scope.toggleTracking = function(isTrackingUserPosition){
+            $scope.toggleTracking = function (isTrackingUserPosition) {
 
-            if(isTrackingUserPosition){
-                mapHelper.startTrackingUserPosition();
-            }
-            else {
-                mapHelper.stopTrackingUserPosition();
-            }
-        };
+                if (isTrackingUserPosition) {
+                    mapHelper.startTrackingUserPosition();
+                }
+                else {
+                    mapHelper.stopTrackingUserPosition();
+                }
+            };
 
-        /* Public Methods END */
+            $scope.togglePirateMode = function (isPirateMode) {
 
-        /* Initialization START */
+                mapHelper.isPirateMode = isPirateMode;
 
-        getSettings();
+                mapHelper.updateUserMarker();
 
-        // Every time this view is entered, do some stuff.
-        $scope.$on( "$ionicView.enter", function( scopes, states ) {
+                mapHelper.updateMapStyle();
+            };
 
-            if( states.fromCache && states.stateName == controllerStateName ) {
+            /* Public Methods END */
 
-                // Get settings
-                getSettings();
-            }
-        });
+            /* Initialization START */
 
-        /* Initialization END */
+            getSettings();
 
-    }]);
+
+            geocoder.getCountyForCoordinates(68.352058,18.81546);
+
+
+            // Every time this view is entered, do some stuff.
+            $scope.$on("$ionicView.enter", function (scopes, states) {
+
+                if (states.fromCache && states.stateName == controllerStateName) {
+
+                    // Get settings
+                    getSettings();
+                }
+            });
+
+            /* Initialization END */
+
+        }]);
 })();

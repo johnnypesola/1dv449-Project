@@ -1,36 +1,36 @@
 'use strict';
 
-(function() {
+(function () {
 
-  angular.module('Climbspotter.layers',
+    angular.module('Climbspotter.layers',
 
-    // Dependencies
-    []
-    )
+        // Dependencies
+        []
+        )
 
-    // Controller
-    .controller('LayersCtrl', ["$scope", "$state", "Markers", function ($scope, $state, Markers) {
+        // Controller
+        .controller('LayersCtrl', ["$scope", "$state", "Markers", function ($scope, $state, Markers) {
 
-        /* Init vars */
-        $scope.markerServicesArray = [];
+            /* Init vars */
+            $scope.markerServicesArray = [];
 
-        /* Private methods START */
+            /* Private methods START */
 
-        var getMarkerServices = function(){
-            $scope.markerServicesArray = Markers.getServices();
-        };
+            var getMarkerServices = function () {
+                $scope.markerServicesArray = Markers.getServices();
+            };
 
-        /* Private Methods END */
+            /* Private Methods END */
 
-        /* Public Methods START */
+            /* Public Methods START */
 
-        /* Public Methods END */
+            /* Public Methods END */
 
-        /* Initialization START */
+            /* Initialization START */
 
-        getMarkerServices();
+            getMarkerServices();
 
-        /* Initialization END */
+            /* Initialization END */
 
-    }]);
+        }]);
 })();

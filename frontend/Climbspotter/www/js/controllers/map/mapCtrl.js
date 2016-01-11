@@ -1,120 +1,81 @@
 'use strict';
 
-(function() {
+(function () {
 
-  angular.module('Climbspotter.map',
+    angular.module('Climbspotter.map',
 
-    // Dependencies
-    ['ngMap']
-  )
+        // Dependencies
+        ['ngMap']
+        )
 
-  // Controller
-  .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
+        // Controller
+        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
 
-    /* Init vars */
-      var controllerStateName = "tab.map";
-      var markerObjArray = [];
+        /* Init vars */
+            var controllerStateName = "tab.map";
+            var markerObjArray = [];
 
-      $scope.activeMarker = {};
+            $scope.activeMarker = {};
 
-    /* Private methods START */
-      var getMarkers = function(){
+        /* Private methods START */
 
-          // Create promise
-          var deferred = $q.defer();
+            var setActiveMaker = function(activeMarkerObj){
 
-          Markers.getAllMarkersNear(
-              {
-                  lat: mapHelper.userPosition.coords.latitude,
-                  lng: mapHelper.userPosition.coords.longitude
-              }
-          ).then(function(markers){
+                $scope.activeMarker = activeMarkerObj;
+            };
 
-              // Store markers in array
-              markerObjArray = markers;
+        /* Private Methods END */
 
-              // Resolve promise
-              deferred.resolve();
-          });
+        /* Public Methods START */
 
-          // Return promise
-          return deferred.promise;
-      };
+            $scope.showMarkerInfo = function (event, marker) {
 
-      var addMarkersToMap = function(waitUntilMapsIsIdle){
+                // Set active marker
+                $scope.activeMarker = marker;
 
-          var displayContent;
+                // Display info google maps window
+                mapHelper.showInfoWindow(marker.obj._id);
 
-          markerObjArray.forEach(function(markerObj){
+            };
 
-              mapHelper.addMarkerToMap(markerObj.obj.location.coordinates[1], markerObj.obj.location.coordinates[0], waitUntilMapsIsIdle, function(){
+            $scope.openActiveMarkerWwwSource = function () {
 
-                  $scope.activeMarker = markerObj;
+                window.open($scope.activeMarker.obj.href);
+            };
 
-              });
-          })
-      };
+        /* Public Methods END */
 
-    /* Private Methods END */
+        /* Initialization START */
+            mapHelper.markerClickCallbackFunc = setActiveMaker;
 
-    /* Public Methods START */
+            mapHelper.loadGoogleMaps()
+                .then(function () {
 
-      $scope.showMarkerInfo = function(event, marker){
+                    //Markers.startRefreshInterval(5000);
 
-          // Set active marker
-          $scope.activeMarker = marker;
+                    mapHelper.doOnDragEnd(function(){
 
-          // Display info google maps window
-          mapHelper.showInfoWindow(marker.obj._id);
+                        console.log("tiles loaded");
+                        //Markers.getAllMarkersNear(mapHelper.getCenter())
 
-      };
+                    });
 
-      $scope.openActiveMarkerWwwSource = function(){
+                    mapHelper.startTrackingUserPosition();
 
-          window.open($scope.activeMarker.obj.href);
-      };
+                });
 
-    /* Public Methods END */
+            // Every time this view is entered, do some stuff.
+            $scope.$on("$ionicView.enter", function (scopes, states) {
 
-    /* Initialization START */
+            });
 
-      mapHelper.loadGoogleMaps()
-          .then(function(){
+            // Every time this view is left, do some stuff.
+            $scope.$on("$ionicView.leave", function (scopes, states) {
 
-              getMarkers().then(function(){
+            });
 
-                  addMarkersToMap();
+        /* Initialization END */
 
-                  mapHelper.startTrackingUserPosition();
-
-              });
-
-          });
-
-      // Every time this view is entered, do some stuff.
-      $scope.$on( "$ionicView.enter", function( scopes, states ) {
-
-          if( states.fromCache && states.stateName == controllerStateName ) {
-
-              if(mapHelper.map !== {}){
-
-                  getMarkers().then(function(){
-
-                      addMarkersToMap(false);
-                  })
-              }
-          }
-      });
-
-      // Every time this view is entered, do some stuff.
-      $scope.$on( "$ionicView.leave", function( scopes, states ) {
-
-          mapHelper.clearMarkers(markerObjArray);
-
-      });
-
-    /* Initialization END */
-
-  }]);
+        }]);
 })();
 
