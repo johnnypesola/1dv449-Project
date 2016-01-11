@@ -51,11 +51,11 @@
             mapHelper.loadGoogleMaps()
                 .then(function () {
 
-                    //Markers.startRefreshInterval(5000);
+                    Markers.startRefreshInterval(10000);
 
                     mapHelper.doOnDragEnd(function(){
 
-                        console.log("tiles loaded");
+                        console.log("drag end?");
                         //Markers.getAllMarkersNear(mapHelper.getCenter())
 
                     });

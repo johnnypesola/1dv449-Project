@@ -14,7 +14,7 @@
 
             /* Init vars */
             var that = this;
-            var intervalObj;
+            var refreshInterval;
 
             that.isBusy = false;
             that.markerObjArray = [];
@@ -183,19 +183,27 @@
 
             that.startRefreshInterval = function(intervalTimeMs){
 
-                // Set interval to get markers
-                setInterval(
-                    function(){
+                // Define function that should run in itervals
+                var intervalFunction = function(){
 
-                        that.getAllMarkersNear(mapHelper.getCenter())
-                    },
-                    intervalTimeMs
-                )
+                    mapHelper.getCenter()
+
+                        // Got center cordinates
+                        .then(function(latLongObj){
+
+                            that.getAllMarkersNear(
+                                latLongObj
+                            );
+                        });
+                };
+
+                // Start interval to get markers
+                refreshInterval = setInterval(intervalFunction, intervalTimeMs)
             };
-
 
             that.stopRefreshInterval = function(){
 
+                clearInterval(refreshInterval);
             };
 
             /* Public Methods END */

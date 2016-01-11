@@ -45,10 +45,7 @@
             }
 
 
-            var mapCanvasElement = document.getElementById("map_canvas");
 
-            // Load google maps
-            $rootScope.map = window.plugin.google.maps.Map.getMap(mapCanvasElement);
 
             // Initialize local database for caching
             dbBase.initDb();
