@@ -19,47 +19,50 @@
 
         /* Private methods START */
 
-            var setActiveMaker = function(activeMarkerObj){
-
-                $scope.activeMarker = activeMarkerObj;
-            };
-
         /* Private Methods END */
 
         /* Public Methods START */
 
-            $scope.showMarkerInfo = function (event, marker) {
+            $scope.doSearch = function(){
 
-                // Set active marker
-                $scope.activeMarker = marker;
+                // Get new markers
+                mapHelper.getCenter()
 
-                // Display info google maps window
-                mapHelper.showInfoWindow(marker.obj._id);
+                    // Got center coordinates
+                    .then(function(latLongObj){
 
-            };
+                        Markers.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm);
+                    });
 
-            $scope.openActiveMarkerWwwSource = function () {
-
-                window.open($scope.activeMarker.obj.href);
             };
 
         /* Public Methods END */
 
         /* Initialization START */
-            mapHelper.markerClickCallbackFunc = setActiveMaker;
 
             mapHelper.loadGoogleMaps()
                 .then(function () {
 
-                    Markers.startRefreshInterval(10000);
+                    //Markers.startRefreshInterval(10000);
 
-                    mapHelper.doOnDragEnd(function(){
 
-                        console.log("drag end?");
-                        //Markers.getAllMarkersNear(mapHelper.getCenter())
+                    // Get all markers on drag end event.
+                    /*
+                    mapHelper.addMapDragEndEventListener(function(){
+
+                        // Get new markers
+                        mapHelper.getCenter()
+
+                            // Got center cordinates
+                            .then(function(latLongObj){
+
+                                Markers.getAllMarkersNear(latLongObj);
+                            });
 
                     });
+                    */
 
+                    // User phone GPS to track position
                     mapHelper.startTrackingUserPosition();
 
                 });

@@ -1,11 +1,46 @@
 <ion-view view-title="Settings">
-  <ion-content>
+    <ion-content ng-controller="SettingsCtrl">
 
-    <ion-toggle toggle-class="toggle-calm" ng-model="isTrackingUserPosition" ng-click="toggleTracking(isTrackingUserPosition)">
-      Track device GPS position
-    </ion-toggle>
-    <ion-toggle toggle-class="toggle-calm" ng-model="isPirateMode" ng-click="togglePirateMode(isPirateMode)">
-      Pirate mode!
-    </ion-toggle>
-  </ion-content>
+        <ion-toggle toggle-class="toggle-calm" ng-model="isTrackingUserPosition" ng-click="toggleTracking(isTrackingUserPosition)">
+            Track device GPS position
+        </ion-toggle>
+
+        <ion-toggle toggle-class="toggle-calm" ng-model="isPirateMode" ng-click="togglePirateMode(isPirateMode)">
+            Pirate mode!
+        </ion-toggle>
+
+        <div class="item item-divider">
+            Max marker count: <span>{{mapMarkerLimit}}</span>
+        </div>
+        <div class="item range range-calm">
+            <i class="icon ion-ios-location-outline"></i>
+            <input
+                type="range"
+                name="markers"
+                min="10"
+                max="600"
+                value="{{mapMarkerLimit}}"
+                ng-model="mapMarkerLimit"
+            >
+            <i class="icon ion-ios-location"></i>
+        </div>
+
+        <div class="item item-divider">
+            Marker spot range: <span>{{mapMarkerBoundsRadiusInKm}} km / {{mapMarkerBoundsRadiusInMiles}} miles</span>
+        </div>
+        <div class="item range range-calm">
+            <i class="icon ion-ios-search"></i>
+            <input
+                    type="range"
+                    name="spotRange"
+                    min="1"
+                    max="200"
+                    value="{{mapMarkerBoundsRadiusInKm}}"
+                    ng-model="mapMarkerBoundsRadiusInKm"
+                    ng-change="calculateMiles()"
+            >
+            <i class="icon ion-ios-search-strong"></i>
+        </div>
+
+    </ion-content>
 </ion-view>

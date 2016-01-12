@@ -50,7 +50,7 @@
              ]
              */
 
-            that.getAllNear = function (latLongObj) {
+            that.getAllNear = function (latLongObj, distance) {
 
                 var deferred, markersToReturnArray = [];
 
@@ -62,7 +62,7 @@
                         params: {
                             lat: latLongObj.lat,
                             lon: latLongObj.lng,
-                            dis: 100,
+                            dis: distance,
                             src: "Sverigeföraren"
                         }
                     })

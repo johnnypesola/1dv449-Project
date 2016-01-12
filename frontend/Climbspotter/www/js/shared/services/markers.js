@@ -74,7 +74,7 @@
                 })
             };
 
-            var fetchAllServiceMarkersNear = function (latLongObj) {
+            var fetchAllServiceMarkersNear = function (latLongObj, distance) {
 
                 var loopPromisesArray = [],
                     servicesArray;
@@ -88,7 +88,7 @@
                 servicesArray.forEach(function (service) {
                     var loopDeferred = $q.defer();
 
-                    service.reference.getAllNear(latLongObj)
+                    service.reference.getAllNear(latLongObj, distance)
                         .then(function (markersArray) {
 
                             that.markerObjArray = that.markerObjArray.concat(markersArray);
@@ -108,6 +108,17 @@
             /* Private Methods END */
 
             /* Public Methods START */
+
+            that.removeMarkersFromDisabledSources = function(){
+
+                markerServicesArray.forEach(function(markerService){
+
+                    if(!markerService.enabled){
+
+                        mapHelper.removeMarkerSource(markerService.name);
+                    }
+                })
+            };
 
             that.getEnabledServices = function () {
 
@@ -155,15 +166,14 @@
                 serviceToEnable.enabled = true;
             };
 
-            that.getAllMarkersNear = function (latLongObj) {
+            that.getAllMarkersNear = function (latLongObj, distance) {
 
                 setLoading(true);
-
 
                 // Create promise
                 var deferred = $q.defer();
 
-                fetchAllServiceMarkersNear(latLongObj)
+                fetchAllServiceMarkersNear(latLongObj, distance)
                     .then(function () {
 
                         // Add markers to map
@@ -191,9 +201,7 @@
                         // Got center cordinates
                         .then(function(latLongObj){
 
-                            that.getAllMarkersNear(
-                                latLongObj
-                            );
+                            that.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm);
                         });
                 };
 
@@ -205,6 +213,7 @@
 
                 clearInterval(refreshInterval);
             };
+
 
             /* Public Methods END */
 

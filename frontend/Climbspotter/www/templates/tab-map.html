@@ -1,19 +1,13 @@
 <ion-view view-title="Map">
     <ion-content>
-        <div id="map_canvas"></div>
-        <!--
-        <map center="" zoom="2" single-info-window="true">
+        <div id="map_canvas">
 
-            <info-window id="marker-info">
-                <div ng-non-bindable="" class="marker-info-container">
-                    <button class="button icon-right ion-android-open button-dark button-small" ng-click="openActiveMarkerWwwSource()">{{activeMarker.name}}<br>
-                        <small>@{{activeMarker.source}}</small>
-                    </button>
-                </div>
-            </info-window>
+            <button
+                id="map-search-button"
+                class="button button-clear button-calm icon ion-ios-search-strong button-large"
+                ng-click="doSearch()"
+            ></button>
+        </div>
 
-        </map>
-
-        -->
     </ion-content>
 </ion-view>
