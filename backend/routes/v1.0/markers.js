@@ -100,7 +100,7 @@ module.exports = function( server ) {
             distanceInKiloMeters = 10/earthsRadius;
 
         // Optinal distance parameter check.
-        if(dis !== null && validator.isInt(dis, {min: 1, max: 100})){
+        if(dis !== null && validator.isInt(dis, {min: 1, max: 200})){
             distanceInKiloMeters = dis/earthsRadius;
         }
 
