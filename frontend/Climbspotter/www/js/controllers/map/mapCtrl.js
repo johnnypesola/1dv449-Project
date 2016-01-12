@@ -1,81 +1,81 @@
 'use strict';
 
-(function() {
+(function () {
 
-  angular.module('Climbspotter.map',
+    angular.module('Climbspotter.map',
 
-    // Dependencies
-    ['ngMap']
-  )
+        // Dependencies
+        ['ngMap']
+        )
 
-  // Controller
-  .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
+        // Controller
+        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
 
-    // Declare variables
-    var markerObjArray = [];
+        /* Init vars */
+            var controllerStateName = "tab.map";
+            var markerObjArray = [];
 
-    // Private methods
-    var getMarkers = function(){
+            $scope.activeMarker = {};
 
-        // Create promise
-        var deferred = $q.defer();
+        /* Private methods START */
 
-        Markers.getAllServiceMarkersNear(
-            {
-                lat: mapHelper.userPosition.coords.latitude,
-                lng: mapHelper.userPosition.coords.longitude
-            }
-        ).then(function(markers){
+            var setActiveMaker = function(activeMarkerObj){
 
-            // Store markers in array
-            markerObjArray = markers;
+                $scope.activeMarker = activeMarkerObj;
+            };
 
-            // Resolve promise
-            deferred.resolve();
-        });
+        /* Private Methods END */
 
-        // Return promise
-        return deferred.promise;
-    };
+        /* Public Methods START */
 
-    var addMarkersToMap = function(){
+            $scope.showMarkerInfo = function (event, marker) {
 
-        markerObjArray.forEach(function(marker){
+                // Set active marker
+                $scope.activeMarker = marker;
 
-            mapHelper.addMarkerToMap(marker.obj.location.coordinates[1], marker.obj.location.coordinates[0])
-                .then(function(marker) {
-                    mapHelper.addInfoWindow("This is some content", marker, "click");
+                // Display info google maps window
+                mapHelper.showInfoWindow(marker.obj._id);
+
+            };
+
+            $scope.openActiveMarkerWwwSource = function () {
+
+                window.open($scope.activeMarker.obj.href);
+            };
+
+        /* Public Methods END */
+
+        /* Initialization START */
+            mapHelper.markerClickCallbackFunc = setActiveMaker;
+
+            mapHelper.loadGoogleMaps()
+                .then(function () {
+
+                    Markers.startRefreshInterval(10000);
+
+                    mapHelper.doOnDragEnd(function(){
+
+                        console.log("drag end?");
+                        //Markers.getAllMarkersNear(mapHelper.getCenter())
+
+                    });
+
+                    mapHelper.startTrackingUserPosition();
+
                 });
-        })
-    };
 
-    // Public methods
+            // Every time this view is entered, do some stuff.
+            $scope.$on("$ionicView.enter", function (scopes, states) {
 
-
-    // Init code
-
-      mapHelper.loadGoogleMaps()
-        .then(function(){
-
-          getMarkers().then(function(){
-
-              addMarkersToMap();
-          });
-
-
-          /*
-          mapHelper.addMarkerToMap(59.32893, 18.06491)
-            .then(function(markerObj) {
-              mapHelper.addInfoWindow("This is some content", markerObj, "click");
             });
 
-          mapHelper.addMarkerToMap(59.98914, 15.81664)
-            .then(function(markerObj) {
-              mapHelper.addInfoWindow("This is Fagersta.", markerObj, "click");
-            });
-          */
+            // Every time this view is left, do some stuff.
+            $scope.$on("$ionicView.leave", function (scopes, states) {
 
-      });
-  }]);
+            });
+
+        /* Initialization END */
+
+        }]);
 })();
 

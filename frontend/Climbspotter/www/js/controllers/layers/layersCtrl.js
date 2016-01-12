@@ -1,19 +1,36 @@
 'use strict';
 
-(function() {
+(function () {
 
-  angular.module('Climbspotter.layers',
+    angular.module('Climbspotter.layers',
 
-    // Dependencies
-    []
-    )
+        // Dependencies
+        []
+        )
 
-    // Controller
-    .controller('LayersCtrl', ["$scope", "$state", function ($scope, $state) {
+        // Controller
+        .controller('LayersCtrl', ["$scope", "$state", "Markers", function ($scope, $state, Markers) {
 
-      $scope.settings = {
-        wwwsverigeForaren: true,
-        www8a: true
-      };
-    }]);
+            /* Init vars */
+            $scope.markerServicesArray = [];
+
+            /* Private methods START */
+
+            var getMarkerServices = function () {
+                $scope.markerServicesArray = Markers.getServices();
+            };
+
+            /* Private Methods END */
+
+            /* Public Methods START */
+
+            /* Public Methods END */
+
+            /* Initialization START */
+
+            getMarkerServices();
+
+            /* Initialization END */
+
+        }]);
 })();

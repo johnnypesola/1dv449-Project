@@ -1,117 +1,218 @@
 /**
  * Created by jopes on 2016-01-09.
  */
-(function() {
-  // Declare module
-  angular.module('Climbspotter.markersService',
+(function () {
 
-      // Dependencies
-      ['ngMap']
-      )
+    // Declare module
+    angular.module('Climbspotter.markersService',
 
-      .service('Markers', ["$q", "$rootScope", "$injector", function ($q, $rootScope, $injector) {
+        // Dependencies
+        ['ngMap']
+        )
 
-          /* Init vars */
-          var that = this;
+        .service('Markers', ["$q", "$rootScope", "$injector", "$ionicLoading", "mapHelper", function ($q, $rootScope, $injector, $ionicLoading, mapHelper) {
 
-          // Declare services
-          var markerServicesArray = [
-              {
-                  name: "8a",
-                  initName: "8aMarkersRepo",
-                  enabled:  true,
-                  reference: {}
-              }
-          ];
+            /* Init vars */
+            var that = this;
+            var refreshInterval;
 
-          /* Private methods START */
+            that.isBusy = false;
+            that.markerObjArray = [];
 
-          var injectEnabledServices = function(){
+            // Declare services
+            var markerServicesArray = [
+                {
+                    name: "8a",
+                    initName: "8aMarkersRepo",
+                    enabled: true,
+                    reference: {}
+                },
+                {
+                    name: "Sverigeföraren",
+                    initName: "sverigeforarenMarkersRepo",
+                    enabled: true,
+                    reference: {}
+                }
+            ];
 
-              that.getEnabledServices().forEach(function(service){
+            /* Private methods START */
+            var setLoading = function(status){
+                if (status){
 
-                  // Inject and store reference.
-                  service.reference = $injector.get(service.initName);
-              })
-          };
+                    $ionicLoading.show({
+                        content: 'Loading',
+                        animation: 'fade-in',
+                        showBackdrop: true,
+                        maxWidth: 200,
+                        showDelay: 0
+                    });
+                }
+                else {
+                    $ionicLoading.hide();
+                }
+            };
 
-          /* Private Methods END */
+            var addMarkersToMap = function() {
 
-          /* Public Methods START */
+                // If there are marker in array
+                if(that.markerObjArray.length > 0){
 
-          that.getEnabledServices = function(){
+                    // Add fetched marker objects as visible objects in google maps instance
+                    that.markerObjArray.forEach(function(dbMarkerObj){
 
-              var returnServiceArray = [];
+                        mapHelper.addMarkerToMap(dbMarkerObj);
+                    });
+                }
+            };
 
-              markerServicesArray.forEach(function(service){
-                  if(service.enabled == true){
-                      returnServiceArray.push(service);
-                  }
-              });
+            var injectEnabledServices = function () {
 
-              return returnServiceArray;
-          };
+                that.getEnabledServices().forEach(function (service) {
 
-          that.disableService = function(serviceName){
+                    // Inject and store reference.
+                    service.reference = $injector.get(service.initName);
+                })
+            };
 
-              var serviceToDisable;
+            var fetchAllServiceMarkersNear = function (latLongObj) {
 
-              serviceToDisable = markerServicesArray.find(function(service){
-                  return service.name == serviceName;
-              });
+                var loopPromisesArray = [],
+                    servicesArray;
 
-              // Set state to disabled
-              serviceToDisable.enabled = false;
-              // Delete reference
-              delete serviceToDisable.reference;
-          };
+                // Clear old markerdata
+                that.markerObjArray = [];
 
-          that.enableService = function(serviceName){
+                // Get all markers from enabled services. And concatenate into one array.
+                servicesArray = that.getEnabledServices();
 
-              var serviceToEnable;
+                servicesArray.forEach(function (service) {
+                    var loopDeferred = $q.defer();
 
-              serviceToEnable = markerServicesArray.find(function(service){
-                  return service.name == serviceName;
-              });
+                    service.reference.getAllNear(latLongObj)
+                        .then(function (markersArray) {
 
-              // Inject and store reference.
-              serviceToEnable.reference = $injector.get(serviceToEnable.initName);
+                            that.markerObjArray = that.markerObjArray.concat(markersArray);
 
-              // Set state to enabled
-              serviceToEnable.enabled = true;
-          };
+                            // Resolve iterational promise
+                            loopDeferred.resolve();
+                        });
 
-          that.getAllServiceMarkersNear = function(latLongObj){
+                    // Store this iteration promise
+                    loopPromisesArray.push(loopDeferred.promise);
+                });
 
-              var returnMarkersArray = [],
-                  deferred;
+                // Return promises
+                return $q.all(loopPromisesArray);
+            };
 
-              // Create promise
-              deferred = $q.defer();
+            /* Private Methods END */
 
-              // Get all markers from enabled services. And concatinate into one array.
-              that.getEnabledServices().forEach(function(service){
+            /* Public Methods START */
 
-                  service.reference.getAllNear(latLongObj)
-                      .then(function(markersArray){
-                          returnMarkersArray = returnMarkersArray.concat(markersArray);
+            that.getEnabledServices = function () {
 
-                          // Resolve promise
-                          deferred.resolve(returnMarkersArray);
-                      })
-              });
+                var returnServiceArray = [];
 
-              // Return promise
-              return deferred.promise;
-          };
+                markerServicesArray.forEach(function (service) {
+                    if (service.enabled == true) {
+                        returnServiceArray.push(service);
+                    }
+                });
 
-          /* Public Methods END */
+                return returnServiceArray;
+            };
 
-          /* Initialization START */
+            that.getServices = function () {
+                return markerServicesArray;
+            };
 
-          injectEnabledServices();
+            that.disableService = function (serviceName) {
 
-          /* Initialization END */
+                var serviceToDisable;
 
-      }]);
+                serviceToDisable = markerServicesArray.find(function (service) {
+                    return service.name == serviceName;
+                });
+
+                // Set state to disabled
+                serviceToDisable.enabled = false;
+                // Delete reference
+                delete serviceToDisable.reference;
+            };
+
+            that.enableService = function (serviceName) {
+
+                var serviceToEnable;
+
+                serviceToEnable = markerServicesArray.find(function (service) {
+                    return service.name == serviceName;
+                });
+
+                // Inject and store reference.
+                serviceToEnable.reference = $injector.get(serviceToEnable.initName);
+
+                // Set state to enabled
+                serviceToEnable.enabled = true;
+            };
+
+            that.getAllMarkersNear = function (latLongObj) {
+
+                setLoading(true);
+
+
+                // Create promise
+                var deferred = $q.defer();
+
+                fetchAllServiceMarkersNear(latLongObj)
+                    .then(function () {
+
+                        // Add markers to map
+                        addMarkersToMap();
+
+                        // Resolve promise
+                        deferred.resolve(that.markerObjArray);
+
+                        // Service is not busy any more
+                        setLoading(false)
+                    });
+
+                // Return promise
+                return deferred.promise;
+            };
+
+
+            that.startRefreshInterval = function(intervalTimeMs){
+
+                // Define function that should run in itervals
+                var intervalFunction = function(){
+
+                    mapHelper.getCenter()
+
+                        // Got center cordinates
+                        .then(function(latLongObj){
+
+                            that.getAllMarkersNear(
+                                latLongObj
+                            );
+                        });
+                };
+
+                // Start interval to get markers
+                refreshInterval = setInterval(intervalFunction, intervalTimeMs)
+            };
+
+            that.stopRefreshInterval = function(){
+
+                clearInterval(refreshInterval);
+            };
+
+            /* Public Methods END */
+
+            /* Initialization START */
+
+            injectEnabledServices();
+
+            /* Initialization END */
+
+        }]);
 })();

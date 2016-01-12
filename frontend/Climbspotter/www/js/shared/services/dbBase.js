@@ -1,119 +1,117 @@
 /**
  * Created by jopes on 2016-01-08.
  */
-(function() {
-  // Declare module
-  angular.module('Climbspotter.dbBaseService',
+(function () {
+    // Declare module
+    angular.module('Climbspotter.dbBaseService',
 
-    // Dependencies
-    ['ngMap']
-    )
+        // Dependencies
+        ['ngMap']
+        )
 
-    .service('dbBase', ["$q", "$cordovaSQLite", "$rootScope", function ($q, $cordovaSQLite, $rootScope) {
+        .service('dbBase', ["$q", "$cordovaSQLite", "$rootScope", function ($q, $cordovaSQLite, $rootScope) {
 
-      // Init vars
-        var that = this;
-        var dbName = "app.db";
-        var dbDeferred = $q.defer(); // DB level promise. Resolves when its ready for usage.
+            // Init vars
+            var that = this;
+            var dbName = "app.db";
+            var dbDeferred = $q.defer(); // DB level promise. Resolves when its ready for usage.
 
-      // Service properties
-        that.db = {};
+            // Service properties
+            that.db = {};
 
-      // Private methods
-        var setupDefaultTables = function () {
+            // Private methods
+            var setupDefaultTables = function () {
 
-            // Create promise
-            var deferred = $q.defer();
+                // Create promise
+                var deferred = $q.defer();
 
-            // Create settings table
-            $cordovaSQLite.execute(that.db, "CREATE TABLE IF NOT EXISTS settings " +
-              "(" +
-              "id integer primary key, " +
-              "name text," +
-              "value text" +
-              ")"
-            )
-              .then(function(){
+                // Create settings table
+                $cordovaSQLite.execute(that.db, "CREATE TABLE IF NOT EXISTS settings " +
+                        "(" +
+                        "id integer primary key, " +
+                        "name text," +
+                        "value text" +
+                        ")"
+                    )
+                    .then(function () {
 
-                  // Resolve promise
-                  deferred.resolve();
-              });
+                        // Resolve promise
+                        deferred.resolve();
+                    });
 
-            // Return promise
-            return deferred.promise;
+                // Return promise
+                return deferred.promise;
 
-        };
+            };
 
-      // Public methods
+            // Public methods
 
-        that.getPromise = function() {
-            return dbDeferred.promise;
-        };
+            that.getPromise = function () {
+                return dbDeferred.promise;
+            };
 
-        that.setupTable = function(tableName, fieldNameArray, fieldTypeArray) {
+            that.setupTable = function (tableName, fieldNameArray, fieldTypeArray) {
 
-            var queryStr, i, deferred;
+                var queryStr, i, deferred;
 
-            // Create promise
-            deferred = $q.defer();
+                // Create promise
+                deferred = $q.defer();
 
-            // Check for invalid arguments
-            if(
-                !Array.isArray(fieldNameArray) ||
-                !Array.isArray(fieldTypeArray) ||
-                fieldNameArray.length !== fieldTypeArray.length
-            )
-            {
-                return false;
-            }
-            // Sanitize table name
-            tableName = tableName.replace(/\W+/g, "");
-
-            // Build query string, add id field as standard
-            queryStr = "CREATE TABLE IF NOT EXISTS " + tableName + " (id integer primary key, ";
-
-            // Loop through desired fields
-            for(i = 0; i < fieldNameArray.length; i++){
-
-                // Sanitize field values
-                queryStr += fieldNameArray[i].replace(/\W+/g, "") + " " + fieldTypeArray[i].replace(/\W+/g, "");
-
-                if(i !== fieldNameArray.length) {
-                    queryStr += ", "
+                // Check for invalid arguments
+                if (
+                    !Array.isArray(fieldNameArray) || !Array.isArray(fieldTypeArray) ||
+                    fieldNameArray.length !== fieldTypeArray.length
+                ) {
+                    return false;
                 }
-            }
-            // End query string
-            queryStr += ")";
+                // Sanitize table name
+                tableName = tableName.replace(/\W+/g, "");
 
-            // Add table
-            $cordovaSQLite.execute(that.db, queryStr)
+                // Build query string, add id field as standard
+                queryStr = "CREATE TABLE IF NOT EXISTS " + tableName + " (id integer primary key, ";
 
-              .then(function(){
-                  // Resolve promise
-                  deferred.resolve();
-              });
+                // Loop through desired fields
+                for (i = 0; i < fieldNameArray.length; i++) {
 
-            // Return promise
-            return deferred.promise;
-        };
+                    // Sanitize field values
+                    queryStr += fieldNameArray[i].replace(/\W+/g, "") + " " + fieldTypeArray[i].replace(/\W+/g, "");
 
-        that.initDb = function() {
+                    if (i !== fieldNameArray.length) {
+                        queryStr += ", "
+                    }
+                }
+                // End query string
+                queryStr += ")";
 
-            // Create or open DB file
-            that.db = $cordovaSQLite.openDB({ name: dbName, location: 2});
+                // Add table
+                $cordovaSQLite.execute(that.db, queryStr)
 
-            // Setup default tables if necessary
-            setupDefaultTables()
+                    .then(function () {
+                        // Resolve promise
+                        deferred.resolve();
+                    });
 
-                .then(function(){
+                // Return promise
+                return deferred.promise;
+            };
 
-                  // Resolve promise
-                  dbDeferred.resolve();
-                });
+            that.initDb = function () {
 
-            // Return promise for db
-            return dbDeferred.promise;
-        };
+                // Create or open DB file
+                that.db = $cordovaSQLite.openDB({name: dbName, location: 2});
 
-    }]);
+                // Setup default tables if necessary
+                setupDefaultTables()
+
+                    .then(function () {
+
+                        // Resolve promise
+                        dbDeferred.resolve();
+                    });
+
+                // Return promise for db
+                return dbDeferred.promise;
+            };
+
+        }]);
 })();

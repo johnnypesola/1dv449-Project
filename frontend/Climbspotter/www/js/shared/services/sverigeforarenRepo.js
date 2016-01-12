@@ -3,13 +3,13 @@
  */
 (function () {
     // Declare module
-    angular.module('Climbspotter.8aMarkersRepoService',
+    angular.module('Climbspotter.sverigeforarenMarkersRepoService',
 
         // Dependencies
         ['ngMap']
-        )
+    )
 
-        .service('8aMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
+        .service('sverigeforarenMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
 
             // Init vars
             var that = this;
@@ -48,7 +48,7 @@
              ...
 
              ]
-            */
+             */
 
             that.getAllNear = function (latLongObj) {
 
@@ -63,7 +63,7 @@
                             lat: latLongObj.lat,
                             lon: latLongObj.lng,
                             dis: 100,
-                            src: "8a"
+                            src: "Sverigeföraren"
                         }
                     })
 
