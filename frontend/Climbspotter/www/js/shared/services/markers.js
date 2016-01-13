@@ -7,10 +7,10 @@
     angular.module('Climbspotter.markersService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
-        .service('Markers', ["$q", "$rootScope", "$injector", "$ionicLoading", "mapHelper", function ($q, $rootScope, $injector, $ionicLoading, mapHelper) {
+        .service('Markers', ["$q", "$rootScope", "$injector", "mapHelper", function ($q, $rootScope, $injector, mapHelper) {
 
             /* Init vars */
             var that = this;
@@ -36,21 +36,6 @@
             ];
 
             /* Private methods START */
-            var setLoading = function(status){
-                if (status){
-
-                    $ionicLoading.show({
-                        content: 'Loading',
-                        animation: 'fade-in',
-                        showBackdrop: true,
-                        maxWidth: 200,
-                        showDelay: 0
-                    });
-                }
-                else {
-                    $ionicLoading.hide();
-                }
-            };
 
             var addMarkersToMap = function() {
 
@@ -99,6 +84,13 @@
 
                             // Resolve iterational promise
                             loopDeferred.resolve();
+                        })
+                        .catch(function(errorMsg){
+
+                            console.log("GET ALL NEAR LOOP ERROR");
+
+                            // Error occured
+                            loopDeferred.reject(errorMsg);
                         });
 
                     // Store this iteration promise
@@ -106,7 +98,7 @@
                 });
 
                 // Return promises
-                return $q.all(loopPromisesArray);
+                return $q.all(loopPromisesArray)
             };
 
             /* Private Methods END */
@@ -172,8 +164,6 @@
 
             that.getAllMarkersNear = function (latLongObj, distance) {
 
-                setLoading(true);
-
                 // Create promise
                 var deferred = $q.defer();
 
@@ -185,9 +175,12 @@
 
                         // Resolve promise
                         deferred.resolve(that.markerObjArray);
+                    })
+                    .catch(function(errorMsg){
 
-                        // Service is not busy any more
-                        setLoading(false)
+                        console.log("fetchAllServiceMarkersNear FAILED");
+
+                        deferred.reject(errorMsg);
                     });
 
                 // Return promise

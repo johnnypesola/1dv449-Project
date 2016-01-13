@@ -5,23 +5,50 @@
     angular.module('Climbspotter.map',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         // Controller
-        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
+        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$ionicPopup", function ($scope, $state, $q, mapHelper, Markers, $ionicLoading, $ionicPopup) {
 
         /* Init vars */
             var controllerStateName = "tab.map";
             var markerObjArray = [];
 
             $scope.activeMarker = {};
+            $scope.isPopupVisible = false;
 
         /* Private methods START */
+
+            var setLoading = function(status){
+                if (status){
+
+                    $ionicLoading.show({
+                        content: 'Loading',
+                        animation: 'fade-in',
+                        showBackdrop: true,
+                        maxWidth: 200,
+                        showDelay: 0
+                    });
+                }
+                else {
+                    $ionicLoading.hide();
+                }
+            };
+
+            var showPopup = function(popupObj){
+                $scope.isPopupVisible = true;
+                $scope.popupTitle = popupObj.title || "";
+                $scope.popupBody = popupObj.body || "";
+            };
 
         /* Private Methods END */
 
         /* Public Methods START */
+
+            $scope.hidePopup = function(){
+                $scope.isPopupVisible = false;
+            };
 
             $scope.doSearch = function(){
 
@@ -31,7 +58,28 @@
                     // Got center coordinates
                     .then(function(latLongObj){
 
-                        Markers.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm);
+                        // App is busy
+                        setLoading(true);
+
+                        Markers.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm)
+                            .then(function(){
+
+                                // App is not busy any more
+                                setLoading(false);
+                            })
+                            // Could not get all markers from sources
+                            .catch(function(errorMsg){
+
+                                // App is not busy any more
+                                setLoading(false);
+
+                                // Show popup
+                                showPopup({
+                                    title: errorMsg
+                                });
+
+                                console.log("getAllMarkersNear FAILED: mapCtrl");
+                            })
                     });
 
             };

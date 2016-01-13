@@ -6,7 +6,7 @@
     angular.module('Climbspotter.sftMarkersRepoService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         .service('stfMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", function ($q, $http, $rootScope, dbBase) {

@@ -6,7 +6,7 @@
     angular.module('Climbspotter.sverigeforarenMarkersRepoService',
 
         // Dependencies
-        ['ngMap']
+        []
     )
 
         .service('sverigeforarenMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
@@ -98,7 +98,9 @@
                     // In case data cannot be fetched
                     .error(function () {
 
-                        deferred.reject();
+                        console.log("DID NOT WORK!");
+
+                        deferred.reject("Could not get Sverigeföraren markers");
                     });
 
 

@@ -6,7 +6,7 @@
     angular.module('Climbspotter.dbBaseService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         .service('dbBase', ["$q", "$cordovaSQLite", "$rootScope", function ($q, $cordovaSQLite, $rootScope) {

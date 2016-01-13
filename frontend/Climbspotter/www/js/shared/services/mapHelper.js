@@ -6,12 +6,12 @@
     angular.module('Climbspotter.mapHelperService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         /* For google maps plugin specific documentation. See https://github.com/mapsplugin/cordova-plugin-googlemaps/wiki */
 
-        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "NgMap", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, NgMap, $rootScope) {
+        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, $rootScope) {
 
             /* Init vars */
             var that = this;
@@ -560,8 +560,6 @@
 
                         // Update user marker on map
                         that.updateUserMarker();
-
-                        console.log("that.mapMarkerLimit", that.mapMarkerLimit);
                     }
                 );
             };
