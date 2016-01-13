@@ -58,10 +58,14 @@
                 if(that.markerObjArray.length > 0){
 
                     // Add fetched marker objects as visible objects in google maps instance
+                    mapHelper.addMarkersToMap(that.markerObjArray);
+
+                    /*
                     that.markerObjArray.forEach(function(dbMarkerObj){
 
                         mapHelper.addMarkerToMap(dbMarkerObj);
                     });
+                    */
                 }
             };
 

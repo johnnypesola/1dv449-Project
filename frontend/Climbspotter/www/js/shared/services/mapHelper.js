@@ -150,6 +150,29 @@
                     });
             };
 
+            var getApproxDistanceBetweenCoords = function ( coords1, coords2 ) {
+
+                // Not the most accurate method, but it does not have to be.
+
+                return Math.sqrt(
+                    Math.pow( coords2.lng - coords1.lng, 2 ) +
+                    Math.pow( coords2.lat - coords1.lat, 2 )
+                );
+            };
+
+            var sortMarkersArrayByProximity = function ( refCoords, coordsArray ) {
+
+                var returnArray;
+
+                // Sort coordsArray after being closest to refCoords (closest will have lowest indexes)
+                returnArray = coordsArray.sort(function ( a, b ) {
+
+                    return ~~(getApproxDistanceBetweenCoords( refCoords, a ) - getApproxDistanceBetweenCoords( refCoords, b ));
+                });
+
+                return returnArray;
+            };
+
             /* Private methods END */
 
             /* Public Methods START */
@@ -363,6 +386,38 @@
                     // Set reference to null
                     mapTileOverlay = null;
                 }
+            };
+
+            that.addMarkersToMap = function(dbMarkersArray){
+
+                var deferred;
+
+                // Create promise
+                deferred = $q.defer();
+
+                // Get markers that are closest to the center
+                that.getCenter()
+                    .then(function(center){
+
+                        // If we have more markers than the limit.
+                        if(dbMarkersArray.length > that.mapMarkerLimit){
+
+                            // Sort markers after center coordinates, the closest ones should have smallest index-numbers.
+                            dbMarkersArray = sortMarkersArrayByProximity(center, dbMarkersArray);
+
+                            //  Slice it to a size that is equal to the limit
+                            dbMarkersArray = dbMarkersArray.slice(0, (+that.mapMarkerLimit));
+                        }
+
+                        // Loop though potential map markers
+                        dbMarkersArray.forEach(function(dbMarker){
+                            that.addMarkerToMap(dbMarker);
+                        });
+                    });
+
+                // Return promise
+                return deferred.promise;
+
             };
 
             that.addMarkerToMap = function (dbMarkerObj) {

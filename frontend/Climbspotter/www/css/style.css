@@ -33,7 +33,15 @@ map span {
     bottom: 20px;
     left: 50%;
     margin-left: -35px;
-    border-radius: 30px;
+
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
     z-index: 10;
     background: #fff !important;
+
+    min-width: 0 !important;
+    max-height: none !important;
 }
