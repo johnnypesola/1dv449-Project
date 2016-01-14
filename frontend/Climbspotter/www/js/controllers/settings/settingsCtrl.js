@@ -71,11 +71,8 @@
             // Every time this view is entered, do some stuff.
             $scope.$on("$ionicView.enter", function (scopes, states) {
 
-                if (states.fromCache && states.stateName == controllerStateName) {
 
-                    // Get settings
-                    //getSettings();
-                }
+
             });
 
             // Watch when settings changes in view, and update them

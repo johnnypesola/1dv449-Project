@@ -120,7 +120,7 @@
                 }, function(mapMarker){
 
                     // Store database Id in map marker.
-                    mapMarker.dbId = dbMarkerObj.id;
+                    mapMarker.dbId = dbMarkerObj.eid;
 
                     // Store marker origin
                     mapMarker.source = dbMarkerObj.source;
@@ -431,12 +431,12 @@
                 if(!googleMapMarkers.some(function(mapMarker){
 
                         return (
-                            mapMarker.dbId == dbMarkerObj.id
+                            mapMarker.dbId == dbMarkerObj.eid
                         )
                     })
                 ){
 
-                    console.log("Marker does not exist... Creating ", dbMarkerObj.id);
+                    console.log("Marker does not exist... Creating ", dbMarkerObj.eid);
 
                     // Create marker on map
                     createMapMarker(dbMarkerObj, "climbing")
@@ -457,7 +457,7 @@
                             }
 
                             // Update root marker count
-                            $rootScope.markerCount = googleMapMarkers.count;
+                            //$rootScope.markerCount = googleMapMarkers.count;
 
                             // Resolve with google marker object.
                             deferred.resolve(mapMarker);

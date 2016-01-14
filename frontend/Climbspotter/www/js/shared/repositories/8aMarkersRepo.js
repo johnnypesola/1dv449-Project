@@ -3,13 +3,13 @@
  */
 (function () {
     // Declare module
-    angular.module('Climbspotter.8aMarkersRepoService',
+    angular.module('Climbspotter.8aMarkersRepository',
 
         // Dependencies
         []
         )
 
-        .service('8aMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
+        .service('8aMarkersRepository', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
 
             // Init vars
             var that = this;
@@ -75,11 +75,15 @@
                             // Parse date variables
                             marker.obj.date = parseDate(marker.obj.date);
 
+
+                            console.log("DATE::: -> ", marker.obj.date);
+
                             // Push DbMarker object to array
                             markersToReturnArray.push(
 
                                 new DbMarker(
-                                    marker.obj._id,
+                                    0,
+                                    marker.obj._id, // Becomes "eid" property
                                     marker.obj.location.coordinates[1], // lat
                                     marker.obj.location.coordinates[0], // lng
                                     marker.obj.name,

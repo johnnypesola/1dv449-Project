@@ -3,13 +3,13 @@
  */
 (function () {
     // Declare module
-    angular.module('Climbspotter.sverigeforarenMarkersRepoService',
+    angular.module('Climbspotter.sverigeforarenMarkersRepository',
 
         // Dependencies
         []
     )
 
-        .service('sverigeforarenMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
+        .service('sverigeforarenMarkersRepository', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
 
             // Init vars
             var that = this;
@@ -79,7 +79,8 @@
                             markersToReturnArray.push(
 
                                 new DbMarker(
-                                    marker.obj._id,
+                                    0,
+                                    marker.obj._id, // Becomes "eid" property
                                     marker.obj.location.coordinates[1], // lat
                                     marker.obj.location.coordinates[0], // lng
                                     marker.obj.name,
