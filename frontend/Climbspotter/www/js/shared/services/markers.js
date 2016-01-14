@@ -37,10 +37,45 @@
 
             /* Private methods START */
 
+            var isOnline = function() {
+
+                return $cordovaNetwork.isOnline() || $cordovaNetwork.getNetwork() === "unknown";
+            };
+
+            var addKmToDegree = function(orgLng, orgLat, km, isLng) {
+
+                var deg;
+
+                if(isLng) {
+                    deg = orgLng + km / 111.320 * Math.cos(orgLat);
+                }
+                else {
+                    deg = orgLat + km / 110.54;
+                }
+
+                return deg;
+            };
+
+            var getBoxCoordinatesForDistance = function(distance, orgLng, orgLat) {
+
+                var startLat, endLat, startLng, endLng;
+
+                startLat = addKmToDegree(orgLng, orgLat, -distance);
+                endLat = addKmToDegree(orgLng, orgLat, distance);
+
+                startLng = addKmToDegree(orgLng, orgLat, distance, true);
+                endLng = addKmToDegree(orgLng, orgLat, -distance, true);
+
+                return {
+                    startLat: startLat,
+                    endLat: endLat,
+                    startLng: startLng,
+                    endLng: endLng
+                }
+            };
+
             var addMarkersToMap = function() {
 
-
-                console.log(that.markerObjArray.length);
 
                 // If there are markers in array
                 if(that.markerObjArray.length > 0){
@@ -54,28 +89,13 @@
 
                 console.log("Trying to insert objects");
 
-                /*
-                that.markerObjArray.forEach(function(m){
-
-                    // Prepare marker values
-                    m.prepareForDb();
-
-                    // Insert to db
-                    dbBase.insert(
-                        m.dbTableName,
-                        ["eid", "lat", "lng", "name", "href", "source", "date"],
-                        [m.eid, m.lat, m.lng, m.name, m.href, m.source, m.date]
-                    );
-                });
-                */
-
                 dbBase.insertMany("marker", ["eid", "lat", "lng", "name", "href", "source", "date"], that.markerObjArray);
 
             };
 
-            var selectClosestMarkersFromDb = function(lat, lng, count) {
+            var selectClosestMarkersFromDb = function(lat, lng, count, distance) {
 
-                var deferred;
+                var deferred, boxCoords;
 
                 // Create promise
                 deferred = $q.defer();
@@ -84,18 +104,44 @@
                 if(
                     validate.isNumber(lat) &&
                     validate.isNumber(lng) &&
-                    validate.isNumber(count)
+                    validate.isNumber(count) &&
+                    validate.isNumber(distance)
                 )
                 {
-                    console.log("SELECT * FROM marker ORDER BY ABS(" + lat + " - lat) + ABS(" + lng + " - lng) ASC LIMIT ?");
+
+                    /* TODO: Add box coordinates to query. Need to be visually repsesented on map, and needs better algorithm
+
+                     boxCoords = getBoxCoordinatesForDistance(distance, lng, lat);
+
+                    dbBase.querySelect("SELECT * FROM marker WHERE " +
+                        "lat > ? AND " +
+                        "lat < ? AND " +
+                        "lng > ? AND " +
+                        "lng < ? " +
+                        "ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
+                        [
+                            boxCoords.startLat,
+                            boxCoords.endLat,
+                            boxCoords.startLng,
+                            boxCoords.endLng,
+                            lat,
+                            lng,
+                            count
+                        ]
+                     */
 
                     dbBase.querySelect("SELECT * FROM marker ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
                         [lat, lng, count]
-                        )
+                    )
                         .then(function(result){
 
                             deferred.resolve(result);
-                        });
+                        })
+                        .catch(function(error){
+                            deferred.reject(error);
+                        })
+
+
                 }
                 // Arguments are not ok.
                 else {
@@ -116,14 +162,14 @@
                 })
             };
 
-            var fetchAllLocalMarkersNear = function(latLongObj, count) {
+            var fetchAllLocalMarkersNear = function(latLongObj, count, distance) {
 
                 var deferred;
 
                 // Create promise
                 deferred = $q.defer();
 
-                selectClosestMarkersFromDb(latLongObj.lat, latLongObj.lng, +count)
+                selectClosestMarkersFromDb(latLongObj.lat, latLongObj.lng, +count, distance)
                     .then(function(result){
 
                         console.log("MARKERS FROM DB: ",result);
@@ -134,7 +180,10 @@
 
                     })
                     .catch(function(error){
-                        deferred.promise.reject();
+
+                        console.log("markers::fetchAllLocalMarkersNear: Could not get local markers", error);
+
+                        deferred.reject(error);
                     });
 
                 // Return promise
@@ -246,8 +295,10 @@
                 // Create promise
                 var deferred = $q.defer();
 
-                // Check if we are online
-                if($cordovaNetwork.isOnline()){
+                // Check if we are online and forced offline mode is off.
+                console.log("$cordovaNetwork.getNetwork() && !$rootScope.isForcedOfflineMode", $cordovaNetwork.getNetwork(), !$rootScope.isForcedOfflineMode);
+
+                if(isOnline() && !$rootScope.isForcedOfflineMode){
 
                     fetchAllServiceMarkersNear(latLongObj, distance)
                         .then(function () {
@@ -270,11 +321,14 @@
                             deferred.reject(errorMsg);
                         });
                 }
-                // We are offline
+                // We are offline or in forced offline mode
                 else {
 
-                    fetchAllLocalMarkersNear(latLongObj, +mapHelper.mapMarkerLimit)
+                    fetchAllLocalMarkersNear(latLongObj, +mapHelper.mapMarkerLimit, distance)
                         .then(function(){
+
+                            // Clear markers from map, have are almost guaranteed to have got the limited amount of markers.
+                            mapHelper.clearMap();
 
                             // Add markers to map
                             addMarkersToMap();

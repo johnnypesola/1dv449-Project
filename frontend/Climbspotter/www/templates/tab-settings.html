@@ -5,8 +5,12 @@
             Track device GPS position
         </ion-toggle>
 
+        <ion-toggle toggle-class="toggle-calm" ng-model="isForcedOfflineMode" ng-click="toggleForcedOfflineMode(isForcedOfflineMode)">
+            Force offline mode
+        </ion-toggle>
+
         <ion-toggle toggle-class="toggle-calm" ng-model="isPirateMode" ng-click="togglePirateMode(isPirateMode)">
-            Pirate mode!
+            Pirate mode
         </ion-toggle>
 
         <div class="item item-divider">

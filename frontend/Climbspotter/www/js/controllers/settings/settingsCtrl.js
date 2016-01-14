@@ -42,17 +42,19 @@
                 }
             };
 
+            $scope.toggleForcedOfflineMode = function(isForcedOfflineMode) {
+
+                $rootScope.isForcedOfflineMode = isForcedOfflineMode;
+
+                $rootScope.$broadcast('isForcedOfflineMode:updated', true);
+            };
+
             $scope.togglePirateMode = function (isPirateMode) {
 
                 mapHelper.isPirateMode = isPirateMode;
 
-                mapHelper.clearMap();
+                $rootScope.$broadcast('isPirateMode:updated', true);
 
-                mapHelper.updateUserMarker();
-
-                mapHelper.updateTileOverlay();
-
-                mapHelper.updateMapMarkerBoundsCirclePositionIfNeeded();
             };
 
             $scope.calculateMiles = function(){
@@ -60,9 +62,9 @@
                 $scope.mapMarkerBoundsRadiusInMiles = kmToMiles($scope.mapMarkerBoundsRadiusInKm);
             };
 
-            /* Public Methods END */
+        /* Public Methods END */
 
-            /* Initialization START */
+        /* Initialization START */
 
             getSettings();
 
@@ -97,7 +99,7 @@
 
             });
 
-            /* Initialization END */
+
 
         }]);
 })();

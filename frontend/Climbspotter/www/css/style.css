@@ -45,3 +45,17 @@ map span {
     min-width: 0 !important;
     max-height: none !important;
 }
+
+#offline-indicator {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+}
+
+#pirate-mode-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+}

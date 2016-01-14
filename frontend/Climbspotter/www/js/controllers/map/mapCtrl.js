@@ -9,7 +9,7 @@
         )
 
         // Controller
-        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$ionicPopup", function ($scope, $state, $q, mapHelper, Markers, $ionicLoading, $ionicPopup) {
+        .controller('MapCtrl', ["$scope", "$rootScope", "$cordovaNetwork", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$ionicPopup", function ($scope, $rootScope, $cordovaNetwork, $state, $q, mapHelper, Markers, $ionicLoading, $ionicPopup) {
 
         /* Init vars */
             var controllerStateName = "tab.map";
@@ -17,6 +17,8 @@
 
             $scope.activeMarker = {};
             $scope.isPopupVisible = false;
+            $rootScope.isOfflineIndicatorVisible = false;
+            $rootScope.isPirateModeIndicatorVisible = false;
 
         /* Private methods START */
 
@@ -41,6 +43,23 @@
                 $scope.popupTitle = popupObj.title || "";
                 $scope.popupBody = popupObj.body || "";
             };
+
+            var setOffline = function(status){
+                $rootScope.isOfflineIndicatorVisible = status;
+
+                if(status){
+                    mapHelper.removeMarkerBoundsCircle();
+                }
+                else {
+                    mapHelper.addMarkerBoundsCircle();
+                }
+            };
+
+            var isOnline = function() {
+
+                return $cordovaNetwork.isOnline() || $cordovaNetwork.getNetwork() === "unknown";
+            };
+
 
         /* Private Methods END */
 
@@ -91,41 +110,64 @@
             mapHelper.loadGoogleMaps()
                 .then(function () {
 
-                    //Markers.startRefreshInterval(10000);
-
-
-                    // Get all markers on drag end event.
-                    /*
-                    mapHelper.addMapDragEndEventListener(function(){
-
-                        // Get new markers
-                        mapHelper.getCenter()
-
-                            // Got center cordinates
-                            .then(function(latLongObj){
-
-                                Markers.getAllMarkersNear(latLongObj);
-                            });
-
-                    });
-                    */
-
                     // User phone GPS to track position
                     mapHelper.startTrackingUserPosition();
 
                 });
 
-            // Every time this view is entered, do some stuff.
-            $scope.$on("$ionicView.enter", function (scopes, states) {
-
-            });
-
-            // Every time this view is left, do some stuff.
-            $scope.$on("$ionicView.leave", function (scopes, states) {
-
-            });
-
         /* Initialization END */
+
+        /* Watchers START */
+
+            // Watch if we go offline.
+            $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
+
+                if($cordovaNetwork.getNetwork() !== "unknown"){
+                    setOffline(true);
+                }
+            });
+
+            // Watch if we go online.
+            $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
+
+                // Check that we are truly online, and that forced offline mode is not on.
+                if(isOnline() && !$rootScope.isForcedOfflineMode){
+                    setOffline(false);
+                }
+            });
+
+            // Watch isForcedOfflineMode setting
+            $rootScope.$on('isForcedOfflineMode:updated', function(event) {
+
+                // Force offline mode is on, show offline indicator
+                if($rootScope.isForcedOfflineMode){
+
+                    setOffline(true);
+                }
+                // Force offline mode is off, hide offline indicator if we are online
+                else if(isOnline()){
+
+                    setOffline(false);
+                }
+            });
+
+            // Watch isPirateMode setting
+            $rootScope.$on('isPirateMode:updated', function(event) {
+
+                // Pirate mode event handler
+                $rootScope.isPirateModeIndicatorVisible = mapHelper.isPirateMode;
+
+                mapHelper.clearMap();
+
+                mapHelper.updateUserMarker();
+
+                mapHelper.updateTileOverlay();
+
+                mapHelper.updateMapMarkerBoundsCirclePositionIfNeeded();
+
+            });
+
+        /* Watchers END */
 
         }]);
 })();

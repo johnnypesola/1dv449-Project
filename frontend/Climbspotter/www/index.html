@@ -25,6 +25,7 @@
 
     <!-- Libraries -->
     <script src="lib/validate.min.js"></script>
+    <script src="lib/geolib.min.js"></script>
 
     <script src="js/controllers/map/mapCtrl.js"></script>
     <script src="js/controllers/layers/layersCtrl.js"></script>
@@ -49,6 +50,16 @@
 <!--
   The nav bar that will be updated as we navigate between views.
 -->
+
+<div id="offline-indicator"
+     class="icon ion-ios-pulse-strong calm"
+     ng-show="isOfflineIndicatorVisible"
+> Offline mode</div> <!-- ion-coffee -->
+
+<div id="pirate-mode-indicator"
+     class="icon ion-android-happy calm"
+     ng-show="isPirateModeIndicatorVisible"
+> Pirate mode</div>
 
 <ion-nav-bar class="calm" align-title="center">
     <ion-nav-back-button>

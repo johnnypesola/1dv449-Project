@@ -13,7 +13,7 @@
 
         .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, $rootScope) {
 
-            /* Init vars */
+        /* Init vars */
             var that = this;
             var getGpsPosOptions = {timeout: 10000, enableHighAccuracy: true};
             var userPositionWatch;
@@ -68,7 +68,8 @@
             that.mapMarkerBoundsRadiusInKm = 100; // Kilometers
             that.shouldUpdateMapMarkerBoundsCirclePosition = true;
 
-            /* Private methods START */
+        /* Private methods START */
+
             var makeIcon = function (iconType) {
 
                 // Pirate mode! check
@@ -173,9 +174,9 @@
                 return returnArray;
             };
 
-            /* Private methods END */
+        /* Private methods END */
 
-            /* Public Methods START */
+        /* Public Methods START */
 
             that.getCenter = function(){
 
@@ -628,12 +629,25 @@
                 mapMarkerBoundsCircle.remove();
             };
 
-            /* Public Methods END */
+            that.setMarkerBoundsCircleVisibility = function(trueOrFalse) {
 
-            /* Initialization START */
+                // If the circle is defined
+                if(mapMarkerBoundsCircle.setVisible) {
+
+                    mapMarkerBoundsCircle.setVisible(trueOrFalse);
+                }
+            };
+
+        /* Public Methods END */
+
+        /* Initialization START */
+
+
+        /* Initialization END */
+
+        /* Watchers START */
 
             // Watch mapMarkerLimit setting
-
             $rootScope.$on('mapMarkerLimit:updated', function(event) {
 
                 var i, howManyToRemove;
@@ -656,11 +670,12 @@
             // Watch mapMarkerBoundsRadiusInKm setting
             $rootScope.$on('mapMarkerBoundsRadiusInKm:updated', function(event) {
 
-                mapMarkerBoundsCircle.setRadius(that.mapMarkerBoundsRadiusInKm * 1000); // * Times 1000 meters
-
+                if(mapMarkerBoundsCircle.setRadius) {
+                    mapMarkerBoundsCircle.setRadius(that.mapMarkerBoundsRadiusInKm * 1000); // * Times 1000 meters
+                }
             });
 
-            /* Initialization END */
+        /* Watchers END */
 
         }]);
 })();
