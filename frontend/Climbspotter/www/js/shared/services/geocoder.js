@@ -6,7 +6,7 @@
     angular.module('Climbspotter.geocoderService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         .service('geocoder', ["$q", "$http", function ($q, $http) {

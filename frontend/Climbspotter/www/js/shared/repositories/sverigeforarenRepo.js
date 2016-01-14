@@ -3,13 +3,13 @@
  */
 (function () {
     // Declare module
-    angular.module('Climbspotter.8aMarkersRepoService',
+    angular.module('Climbspotter.sverigeforarenMarkersRepository',
 
         // Dependencies
-        ['ngMap']
-        )
+        []
+    )
 
-        .service('8aMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
+        .service('sverigeforarenMarkersRepository', ["$q", "$http", "$rootScope", "dbBase", "DbMarker", function ($q, $http, $rootScope, dbBase, DbMarker) {
 
             // Init vars
             var that = this;
@@ -48,9 +48,9 @@
              ...
 
              ]
-            */
+             */
 
-            that.getAllNear = function (latLongObj) {
+            that.getAllNear = function (latLongObj, distance) {
 
                 var deferred, markersToReturnArray = [];
 
@@ -62,8 +62,8 @@
                         params: {
                             lat: latLongObj.lat,
                             lon: latLongObj.lng,
-                            dis: 100,
-                            src: "8a"
+                            dis: distance,
+                            src: "Sverigeföraren"
                         }
                     })
 
@@ -79,7 +79,8 @@
                             markersToReturnArray.push(
 
                                 new DbMarker(
-                                    marker.obj._id,
+                                    0,
+                                    marker.obj._id, // Becomes "eid" property
                                     marker.obj.location.coordinates[1], // lat
                                     marker.obj.location.coordinates[0], // lng
                                     marker.obj.name,
@@ -98,7 +99,9 @@
                     // In case data cannot be fetched
                     .error(function () {
 
-                        deferred.reject();
+                        console.log("DID NOT WORK!");
+
+                        deferred.reject("Could not get Sverigeföraren markers");
                     });
 
 

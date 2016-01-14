@@ -23,9 +23,9 @@
         'Climbspotter.mapHelperService',
         'Climbspotter.dbBaseService',
         'Climbspotter.markersService',
-        'Climbspotter.8aMarkersRepoService',
-        'Climbspotter.sverigeforarenMarkersRepoService',
-        'Climbspotter.sftMarkersRepoService',
+        'Climbspotter.8aMarkersRepository',
+        'Climbspotter.sverigeforarenMarkersRepository',
+        'Climbspotter.sftMarkersRepository',
         'Climbspotter.geocoderService',
         'Climbspotter.dbMarkerModel'
     ]);

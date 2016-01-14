@@ -5,61 +5,112 @@
     angular.module('Climbspotter.map',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
         // Controller
-        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "NgMap", "Markers", function ($scope, $state, $q, mapHelper, NgMap, Markers) {
+        .controller('MapCtrl', ["$scope", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$ionicPopup", function ($scope, $state, $q, mapHelper, Markers, $ionicLoading, $ionicPopup) {
 
         /* Init vars */
             var controllerStateName = "tab.map";
             var markerObjArray = [];
 
             $scope.activeMarker = {};
+            $scope.isPopupVisible = false;
 
         /* Private methods START */
 
-            var setActiveMaker = function(activeMarkerObj){
+            var setLoading = function(status){
+                if (status){
 
-                $scope.activeMarker = activeMarkerObj;
+                    $ionicLoading.show({
+                        content: 'Loading',
+                        animation: 'fade-in',
+                        showBackdrop: true,
+                        maxWidth: 200,
+                        showDelay: 0
+                    });
+                }
+                else {
+                    $ionicLoading.hide();
+                }
+            };
+
+            var showPopup = function(popupObj){
+                $scope.isPopupVisible = true;
+                $scope.popupTitle = popupObj.title || "";
+                $scope.popupBody = popupObj.body || "";
             };
 
         /* Private Methods END */
 
         /* Public Methods START */
 
-            $scope.showMarkerInfo = function (event, marker) {
-
-                // Set active marker
-                $scope.activeMarker = marker;
-
-                // Display info google maps window
-                mapHelper.showInfoWindow(marker.obj._id);
-
+            $scope.hidePopup = function(){
+                $scope.isPopupVisible = false;
             };
 
-            $scope.openActiveMarkerWwwSource = function () {
+            $scope.doSearch = function(){
 
-                window.open($scope.activeMarker.obj.href);
+                // Get new markers
+                mapHelper.getCenter()
+
+                    // Got center coordinates
+                    .then(function(latLongObj){
+
+                        // App is busy
+                        setLoading(true);
+
+                        Markers.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm)
+                            .then(function(){
+
+                                // App is not busy any more
+                                setLoading(false);
+                            })
+                            // Could not get all markers from sources
+                            .catch(function(errorMsg){
+
+                                // App is not busy any more
+                                setLoading(false);
+
+                                // Show popup
+                                showPopup({
+                                    title: errorMsg
+                                });
+
+                                console.log("getAllMarkersNear FAILED: mapCtrl");
+                            })
+                    });
+
             };
 
         /* Public Methods END */
 
         /* Initialization START */
-            mapHelper.markerClickCallbackFunc = setActiveMaker;
 
             mapHelper.loadGoogleMaps()
                 .then(function () {
 
-                    Markers.startRefreshInterval(10000);
+                    //Markers.startRefreshInterval(10000);
 
-                    mapHelper.doOnDragEnd(function(){
 
-                        console.log("drag end?");
-                        //Markers.getAllMarkersNear(mapHelper.getCenter())
+                    // Get all markers on drag end event.
+                    /*
+                    mapHelper.addMapDragEndEventListener(function(){
+
+                        // Get new markers
+                        mapHelper.getCenter()
+
+                            // Got center cordinates
+                            .then(function(latLongObj){
+
+                                Markers.getAllMarkersNear(latLongObj);
+                            });
 
                     });
+                    */
 
+                    // User phone GPS to track position
                     mapHelper.startTrackingUserPosition();
 
                 });

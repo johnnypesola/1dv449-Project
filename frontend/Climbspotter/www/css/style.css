@@ -1,18 +1,47 @@
 /* Empty. Add your own CSS if you like */
 
 .scroll {
-  height: 100%;
+    height: 100%;
 }
 
 map, #map_canvas {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 map .marker-info-container {
-  margin: 5px !important;
+    margin: 5px !important;
 }
 
 map span {
-  color: #666;
+    color: #666;
+}
+
+.item-divider span {
+    color: #aaa;
+}
+
+.item-divider small {
+    color: #aaa;
+    font-weight: normal;
+    float: right;
+}
+
+#map-search-button {
+
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    margin-left: -35px;
+
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
+    z-index: 10;
+    background: #fff !important;
+
+    min-width: 0 !important;
+    max-height: none !important;
 }

@@ -7,10 +7,10 @@
     angular.module('Climbspotter.markersService',
 
         // Dependencies
-        ['ngMap']
-        )
+        []
+    )
 
-        .service('Markers', ["$q", "$rootScope", "$injector", "$ionicLoading", "mapHelper", function ($q, $rootScope, $injector, $ionicLoading, mapHelper) {
+    .service('Markers', ["$q", "$rootScope", "$injector", "$cordovaNetwork", "mapHelper", "dbBase", function ($q, $rootScope, $injector, $cordovaNetwork, mapHelper, dbBase) {
 
             /* Init vars */
             var that = this;
@@ -23,46 +23,88 @@
             var markerServicesArray = [
                 {
                     name: "8a",
-                    initName: "8aMarkersRepo",
+                    initName: "8aMarkersRepository",
                     enabled: true,
                     reference: {}
                 },
                 {
                     name: "Sverigeföraren",
-                    initName: "sverigeforarenMarkersRepo",
+                    initName: "sverigeforarenMarkersRepository",
                     enabled: true,
                     reference: {}
                 }
             ];
 
             /* Private methods START */
-            var setLoading = function(status){
-                if (status){
-
-                    $ionicLoading.show({
-                        content: 'Loading',
-                        animation: 'fade-in',
-                        showBackdrop: true,
-                        maxWidth: 200,
-                        showDelay: 0
-                    });
-                }
-                else {
-                    $ionicLoading.hide();
-                }
-            };
 
             var addMarkersToMap = function() {
 
-                // If there are marker in array
+
+                console.log(that.markerObjArray.length);
+
+                // If there are markers in array
                 if(that.markerObjArray.length > 0){
 
                     // Add fetched marker objects as visible objects in google maps instance
-                    that.markerObjArray.forEach(function(dbMarkerObj){
-
-                        mapHelper.addMarkerToMap(dbMarkerObj);
-                    });
+                    mapHelper.addMarkersToMap(that.markerObjArray);
                 }
+            };
+
+            var addMarkersToDb = function() {
+
+                console.log("Trying to insert objects");
+
+                /*
+                that.markerObjArray.forEach(function(m){
+
+                    // Prepare marker values
+                    m.prepareForDb();
+
+                    // Insert to db
+                    dbBase.insert(
+                        m.dbTableName,
+                        ["eid", "lat", "lng", "name", "href", "source", "date"],
+                        [m.eid, m.lat, m.lng, m.name, m.href, m.source, m.date]
+                    );
+                });
+                */
+
+                dbBase.insertMany("marker", ["eid", "lat", "lng", "name", "href", "source", "date"], that.markerObjArray);
+
+            };
+
+            var selectClosestMarkersFromDb = function(lat, lng, count) {
+
+                var deferred;
+
+                // Create promise
+                deferred = $q.defer();
+
+                // Check arguments, prevent sql injection
+                if(
+                    validate.isNumber(lat) &&
+                    validate.isNumber(lng) &&
+                    validate.isNumber(count)
+                )
+                {
+                    console.log("SELECT * FROM marker ORDER BY ABS(" + lat + " - lat) + ABS(" + lng + " - lng) ASC LIMIT ?");
+
+                    dbBase.querySelect("SELECT * FROM marker ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
+                        [lat, lng, count]
+                        )
+                        .then(function(result){
+
+                            deferred.resolve(result);
+                        });
+                }
+                // Arguments are not ok.
+                else {
+                    deferred.reject("markers::selectClosestMarkersFromDb: Invalid arguments");
+                }
+
+                // Return promise
+                return deferred.promise;
+
             };
 
             var injectEnabledServices = function () {
@@ -74,13 +116,39 @@
                 })
             };
 
-            var fetchAllServiceMarkersNear = function (latLongObj) {
+            var fetchAllLocalMarkersNear = function(latLongObj, count) {
+
+                var deferred;
+
+                // Create promise
+                deferred = $q.defer();
+
+                selectClosestMarkersFromDb(latLongObj.lat, latLongObj.lng, +count)
+                    .then(function(result){
+
+                        console.log("MARKERS FROM DB: ",result);
+
+                        that.markerObjArray = result;
+
+                        deferred.resolve();
+
+                    })
+                    .catch(function(error){
+                        deferred.promise.reject();
+                    });
+
+                // Return promise
+                return deferred.promise;
+            };
+
+            var fetchAllServiceMarkersNear = function (latLongObj, distance) {
 
                 var loopPromisesArray = [],
                     servicesArray;
 
-                // Clear old markerdata
+                // Clear old marker data
                 that.markerObjArray = [];
+
 
                 // Get all markers from enabled services. And concatenate into one array.
                 servicesArray = that.getEnabledServices();
@@ -88,13 +156,20 @@
                 servicesArray.forEach(function (service) {
                     var loopDeferred = $q.defer();
 
-                    service.reference.getAllNear(latLongObj)
+                    service.reference.getAllNear(latLongObj, distance)
                         .then(function (markersArray) {
 
                             that.markerObjArray = that.markerObjArray.concat(markersArray);
 
                             // Resolve iterational promise
                             loopDeferred.resolve();
+                        })
+                        .catch(function(errorMsg){
+
+                            console.log("GET ALL NEAR LOOP ERROR");
+
+                            // Error occured
+                            loopDeferred.reject(errorMsg);
                         });
 
                     // Store this iteration promise
@@ -102,12 +177,23 @@
                 });
 
                 // Return promises
-                return $q.all(loopPromisesArray);
+                return $q.all(loopPromisesArray)
             };
 
             /* Private Methods END */
 
             /* Public Methods START */
+
+            that.removeMarkersFromDisabledSources = function(){
+
+                markerServicesArray.forEach(function(markerService){
+
+                    if(!markerService.enabled){
+
+                        mapHelper.removeMarkerSource(markerService.name);
+                    }
+                })
+            };
 
             that.getEnabledServices = function () {
 
@@ -155,26 +241,54 @@
                 serviceToEnable.enabled = true;
             };
 
-            that.getAllMarkersNear = function (latLongObj) {
-
-                setLoading(true);
-
+            that.getAllMarkersNear = function (latLongObj, distance) {
 
                 // Create promise
                 var deferred = $q.defer();
 
-                fetchAllServiceMarkersNear(latLongObj)
-                    .then(function () {
+                // Check if we are online
+                if($cordovaNetwork.isOnline()){
 
-                        // Add markers to map
-                        addMarkersToMap();
+                    fetchAllServiceMarkersNear(latLongObj, distance)
+                        .then(function () {
 
-                        // Resolve promise
-                        deferred.resolve(that.markerObjArray);
+                            console.log("fetchAllServiceMarkersNear Resolved");
 
-                        // Service is not busy any more
-                        setLoading(false)
-                    });
+                            // Add markers to map
+                            addMarkersToMap();
+
+                            // Add markers to DB
+                            addMarkersToDb();
+
+                            // Resolve promise
+                            deferred.resolve(that.markerObjArray);
+                        })
+                        .catch(function(errorMsg){
+
+                            console.log("fetchAllServiceMarkersNear FAILED");
+
+                            deferred.reject(errorMsg);
+                        });
+                }
+                // We are offline
+                else {
+
+                    fetchAllLocalMarkersNear(latLongObj, +mapHelper.mapMarkerLimit)
+                        .then(function(){
+
+                            // Add markers to map
+                            addMarkersToMap();
+
+                            // Resolve promise
+                            deferred.resolve(that.markerObjArray);
+                        })
+                        .catch(function(errorMsg){
+
+                            console.log("fetchAllLocalMarkersNear FAILED");
+
+                            deferred.reject(errorMsg);
+                        });
+                }
 
                 // Return promise
                 return deferred.promise;
@@ -191,9 +305,7 @@
                         // Got center cordinates
                         .then(function(latLongObj){
 
-                            that.getAllMarkersNear(
-                                latLongObj
-                            );
+                            that.getAllMarkersNear(latLongObj, mapHelper.mapMarkerBoundsRadiusInKm);
                         });
                 };
 
@@ -205,6 +317,7 @@
 
                 clearInterval(refreshInterval);
             };
+
 
             /* Public Methods END */
 

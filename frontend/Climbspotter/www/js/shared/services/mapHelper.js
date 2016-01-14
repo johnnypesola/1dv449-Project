@@ -6,10 +6,12 @@
     angular.module('Climbspotter.mapHelperService',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
-        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "NgMap", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, NgMap, $rootScope) {
+        /* For google maps plugin specific documentation. See https://github.com/mapsplugin/cordova-plugin-googlemaps/wiki */
+
+        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, $rootScope) {
 
             /* Init vars */
             var that = this;
@@ -17,31 +19,12 @@
             var userPositionWatch;
             var userMarker;
             var isTrackingUserPosition = false;
+            var mapTileOverlay;
+            var mapMarkerBoundsCircle = {};
+
 
             // Keep track of google map Markers, these are the actual ones visible on the map.
             var googleMapMarkers = [];
-
-            /* Google maps plugin possible event handlers for map object.
-                Apply like this: that.map.addEventListener(that.google.maps.event.EVENT_NAME, callBack)
-
-            CAMERA_CHANGE: "camera_change"
-            CAMERA_IDLE: "camera_idle"
-            INDOOR_BUILDING_FOCUSED: "indoor_building_focused"
-            INDOOR_LEVEL_ACTIVATED: "indoor_level_activated"
-            INFO_CLICK: "info_click"
-            MAP_CLICK: "click"
-            MAP_CLOSE: "map_close"
-            MAP_LOADED: "map_loaded"
-            MAP_LONG_CLICK: "long_click"
-            MAP_READY: "map_ready"
-            MAP_WILL_MOVE: "will_move"
-            MARKER_CLICK: "click"
-            MARKER_DRAG: "drag"
-            MARKER_DRAG_END: "drag_end"
-            MARKER_DRAG_START: "drag_start"
-            MY_LOCATION_BUTTON_CLICK: "my_location_button_click"
-            MY_LOCATION_CHANGE: "my_location_change
-            */
 
             // Marker icon image specs
             var markerIcons = {
@@ -66,22 +49,12 @@
                 }
             };
 
-            // Map presentation styles
-            var mapStyles = {
-                normal: {
-                    styles: []
-                },
-                pirate: {
-                    styles: [
-                        {
-                            stylers: [
-                                {hue: "#1900ff"},
-                                {invert_lightness: true},
-                                {weight: 0.5}
-                            ]
-                        }
-                    ]
-                }
+            // Map presentation options
+            var mapOptions = {
+                compass: true,
+                myLocationButton: true,
+                indoorPicker: true,
+                zoom: true
             };
 
             // Service properties
@@ -91,7 +64,9 @@
             that.animationDuration = 2000; // 2 seconds;
             that.defaultMapType = "TERRAIN";
             that.isPirateMode = false;
-            that.markerClickCallbackFunc = function(){};
+            that.mapMarkerLimit = 300;
+            that.mapMarkerBoundsRadiusInKm = 100; // Kilometers
+            that.shouldUpdateMapMarkerBoundsCirclePosition = true;
 
             /* Private methods START */
             var makeIcon = function (iconType) {
@@ -108,14 +83,17 @@
 
             var addMarkerTouchEvent = function(mapMarker, dbMarkerObj){
 
-                // Add click/touch functionality
+                // Add click/touch event on marker
                 mapMarker.addEventListener(that.google.maps.event.MARKER_CLICK, function() {
 
                     // Show info window
                     mapMarker.showInfoWindow();
+                });
 
-                    // Execute marker click callback, probably defined in mapCtrl
-                    that.markerClickCallbackFunc(dbMarkerObj);
+                // Add click/touch event on info window
+                mapMarker.addEventListener(that.google.maps.event.INFO_CLICK, function() {
+
+                    window.open(dbMarkerObj.href);
                 });
             };
 
@@ -142,7 +120,10 @@
                 }, function(mapMarker){
 
                     // Store database Id in map marker.
-                    mapMarker.dbId = dbMarkerObj.id;
+                    mapMarker.dbId = dbMarkerObj.eid;
+
+                    // Store marker origin
+                    mapMarker.source = dbMarkerObj.source;
 
                     // Resolve marker creation
                     deferred.resolve(mapMarker);
@@ -150,6 +131,46 @@
 
                 // Return promise
                 return deferred.promise;
+            };
+
+            var updateMapMarkerBoundsCirclePosition = function(){
+
+                var center, centerLatLng;
+
+                // Create get camera center position
+                that.getCenter()
+                    .then(function(center){
+
+                        // Create LatLng
+                        centerLatLng = new that.google.maps.LatLng(center.lat, center.lng);
+
+                        // Set position
+                        mapMarkerBoundsCircle.setCenter(centerLatLng);
+
+                    });
+            };
+
+            var getApproxDistanceBetweenCoords = function ( coords1, coords2 ) {
+
+                // Not the most accurate method, but it does not have to be.
+
+                return Math.sqrt(
+                    Math.pow( coords2.lng - coords1.lng, 2 ) +
+                    Math.pow( coords2.lat - coords1.lat, 2 )
+                );
+            };
+
+            var sortMarkersArrayByProximity = function ( refCoords, coordsArray ) {
+
+                var returnArray;
+
+                // Sort coordsArray after being closest to refCoords (closest will have lowest indexes)
+                returnArray = coordsArray.sort(function ( a, b ) {
+
+                    return ~~(getApproxDistanceBetweenCoords( refCoords, a ) - getApproxDistanceBetweenCoords( refCoords, b ));
+                });
+
+                return returnArray;
             };
 
             /* Private methods END */
@@ -200,20 +221,9 @@
                         icon: icon
                     }, function(marker) {
 
-                        console.log("updateUserMarker", marker);
-
                         // Update reference
                         userMarker = marker;
                     });
-
-                    /*
-                    userMarker = new that.google.maps.Marker({
-                        map: that.map,
-                        position: latLng,
-                        icon: icon
-                    });
-                    */
-
                 }
                 // Update position
                 else {
@@ -224,14 +234,22 @@
                 }
             };
 
-            that.updateMapStyle = function () {
+            that.updateTileOverlay = function () {
 
                 var style;
 
                 // Pirate mode! check
-                style = that.isPirateMode ? mapStyles.pirate : mapStyles.normal;
+                if(that.isPirateMode){
 
-                that.map.setOptions(style);
+                    // Set to maptype to roadmap, othervise it will be slow
+                    that.setMapType("ROADMAP");
+
+                    that.addTileOverlay("http://tile.stamen.com/watercolor/<zoom>/<x>/<y>.jpg");
+                }
+                else if(!that.isPirateMode) {
+
+                    that.removeTileOverlay();
+                }
             };
 
             that.loadGoogleMaps = function () {
@@ -241,14 +259,8 @@
                 // Create promise
                 deferred = $q.defer();
 
-                // Load maps
-
-                console.log("loadGoogleMaps");
-
                 // Wait until the device is ready and maps is available.
                 $ionicPlatform.ready(function () {
-
-                    console.log("$ionicPlatform.ready");
 
                     var mapCanvasElement = document.getElementById("map_canvas");
 
@@ -256,13 +268,13 @@
                     that.map = window.plugin.google.maps.Map.getMap(mapCanvasElement);
                     that.google = window.plugin.google;
 
-                    console.log(that.google);
+                    // Set Map options
+                    that.map.setOptions(mapOptions);
 
                     // When google maps is ready
                     that.map.addEventListener(that.google.maps.event.MAP_READY, function () {
 
-
-                        //
+                        // Update user position
                         that.updateUserPosition()
 
                             // All went good
@@ -271,7 +283,12 @@
                                 // Move camera to user location
                                 that.animateCameraTo(that.userPosition.coords.latitude, that.userPosition.coords.longitude)
                                     .then(function(){
-                                        that.setMapType(that.defaultMapType)
+
+                                        // Set default map type
+                                        that.setMapType(that.defaultMapType);
+
+                                        // Add marker bounds circle
+                                        that.addMarkerBoundsCircle();
                                     });
 
                                 // Resolve promise
@@ -342,22 +359,84 @@
                 }
             };
 
-            that.addMarkerToMap = function (dbMarkerObj) {
+            that.addTileOverlay = function(tileUrlFormat){
 
-                var marker, deferred;
+                // There should no be reference
+                if(mapTileOverlay == null) {
+
+                    that.map.addTileOverlay({
+
+                        // <x>,<y> and <zoom> are replaced with values
+                        tileUrlFormat: tileUrlFormat
+                    }, function(tileOverlay) {
+
+                        // Store for future reference
+                        mapTileOverlay = tileOverlay;
+                    });
+                }
+            };
+
+            that.removeTileOverlay = function(){
+
+                if(mapTileOverlay !== null){
+
+                    // Remove tile overlay
+                    mapTileOverlay.remove();
+
+                    // Set reference to null
+                    mapTileOverlay = null;
+                }
+            };
+
+            that.addMarkersToMap = function(dbMarkersArray){
+
+                var deferred;
 
                 // Create promise
                 deferred = $q.defer();
 
+                // Get markers that are closest to the center
+                that.getCenter()
+                    .then(function(center){
+
+                        // If we have more markers than the limit.
+                        if(dbMarkersArray.length > that.mapMarkerLimit){
+
+                            // Sort markers after center coordinates, the closest ones should have smallest index-numbers.
+                            dbMarkersArray = sortMarkersArrayByProximity(center, dbMarkersArray);
+
+                            //  Slice it to a size that is equal to the limit
+                            dbMarkersArray = dbMarkersArray.slice(0, (+that.mapMarkerLimit));
+                        }
+
+                        // Loop though potential map markers
+                        dbMarkersArray.forEach(function(dbMarker){
+                            that.addMarkerToMap(dbMarker);
+                        });
+                    });
+
+                // Return promise
+                return deferred.promise;
+
+            };
+
+            that.addMarkerToMap = function (dbMarkerObj) {
+
+                var deferred;
+
+                // Create promise
+                deferred = $q.defer();
+
+                // Check that marker does not exist
                 if(!googleMapMarkers.some(function(mapMarker){
 
                         return (
-                            mapMarker.dbId == dbMarkerObj.id
+                            mapMarker.dbId == dbMarkerObj.eid
                         )
                     })
                 ){
 
-                    console.log("Marker does not exist... Creating ", dbMarkerObj);
+                    console.log("Marker does not exist... Creating ", dbMarkerObj.eid);
 
                     // Create marker on map
                     createMapMarker(dbMarkerObj, "climbing")
@@ -370,6 +449,15 @@
 
                             // Push marker to array.
                             googleMapMarkers.push(mapMarker);
+
+                            // Check if markersArray is full, remove the first entry
+                            if(googleMapMarkers.length > that.mapMarkerLimit){
+                                googleMapMarkers[0].remove();
+                                googleMapMarkers.shift();
+                            }
+
+                            // Update root marker count
+                            //$rootScope.markerCount = googleMapMarkers.count;
 
                             // Resolve with google marker object.
                             deferred.resolve(mapMarker);
@@ -384,19 +472,37 @@
                 return deferred.promise;
             };
 
-            that.clearMarkers = function (markerObjArray) {
+            that.clearMap = function() {
 
-                googleMapMarkers.forEach(function (marker) {
+                // Clear map events
+                that.map.off();
 
-                    marker.setMap(null);
-
+                googleMapMarkers.forEach(function(mapMarker){
+                    mapMarker.remove();
                 });
 
                 // Reset container array
                 googleMapMarkers = [];
             };
 
-            that.updateUserPosition = function () {
+            that.removeMarkerSource = function(sourceName){
+
+                googleMapMarkers.forEach(function(mapMarker, index){
+
+                    if(mapMarker.source == sourceName){
+
+                        // Remove marker from map
+                        mapMarker.remove();
+                    }
+                });
+
+                // Remove markers from mapMarkers array
+                googleMapMarkers = googleMapMarkers.filter(function(mapMarker){
+                    return mapMarker.source !== sourceName;
+                });
+            };
+
+            that.updateUserPosition = function() {
 
                 var deferred;
 
@@ -471,14 +577,90 @@
                 return isTrackingUserPosition;
             };
 
-            that.doOnDragEnd = function(callBack){
+            that.addMapDragEndEventListener = function(callBack){
 
 
                 //that.google.maps.event.addListener(that.map, 'dragend', callBack);
-                that.map.addEventListener(that.google.maps.event.CAMERA_IDLE, callBack)
+                that.map.addEventListener(that.google.maps.event.CAMERA_CHANGE, callBack)
+            };
+
+            that.addMarkerBoundsCircle = function(){
+
+                var radius, centerLatLng;
+
+                radius = that.mapMarkerBoundsRadiusInKm * 1000; // * Times 1000 meters
+
+                that.getCenter()
+                    .then(function(center){
+
+                        centerLatLng = new that.google.maps.LatLng(center.lat, center.lng);
+
+                        that.map.addCircle({
+                            'center': centerLatLng,
+                            'radius': radius,
+                            'strokeColor' : '#81cff4',
+                            'fillColor' : '#FFF0',
+                            'strokeWidth': 3
+                        }, function(circle) {
+
+                            // Store reference
+                            mapMarkerBoundsCircle = circle;
+
+                            that.updateMapMarkerBoundsCirclePositionIfNeeded();
+                        });
+
+                    });
+            };
+
+            that.updateMapMarkerBoundsCirclePositionIfNeeded = function(){
+
+                // Update circle position on camera change
+                that.map.on(that.google.maps.event.CAMERA_CHANGE, function(){
+
+                    if(that.shouldUpdateMapMarkerBoundsCirclePosition){
+                        updateMapMarkerBoundsCirclePosition();
+                    }
+                });
+            };
+
+            that.removeMarkerBoundsCircle = function() {
+
+                mapMarkerBoundsCircle.remove();
             };
 
             /* Public Methods END */
+
+            /* Initialization START */
+
+            // Watch mapMarkerLimit setting
+
+            $rootScope.$on('mapMarkerLimit:updated', function(event) {
+
+                var i, howManyToRemove;
+
+                // If we have too many makers now.
+                if(googleMapMarkers.length > that.mapMarkerLimit){
+
+                    howManyToRemove = googleMapMarkers.length - that.mapMarkerLimit;
+
+                    // Remove markers oldest markers from map
+                    for(i = 0; i < howManyToRemove; i++){
+                        googleMapMarkers[i].remove();
+                    }
+
+                    // Remove the oldest from array
+                    googleMapMarkers.splice(0, howManyToRemove);
+                }
+            });
+
+            // Watch mapMarkerBoundsRadiusInKm setting
+            $rootScope.$on('mapMarkerBoundsRadiusInKm:updated', function(event) {
+
+                mapMarkerBoundsCircle.setRadius(that.mapMarkerBoundsRadiusInKm * 1000); // * Times 1000 meters
+
+            });
+
+            /* Initialization END */
 
         }]);
 })();

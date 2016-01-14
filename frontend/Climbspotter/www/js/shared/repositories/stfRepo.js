@@ -3,13 +3,13 @@
  */
 (function () {
     // Declare module
-    angular.module('Climbspotter.sftMarkersRepoService',
+    angular.module('Climbspotter.sftMarkersRepository',
 
         // Dependencies
-        ['ngMap']
+        []
         )
 
-        .service('stfMarkersRepo', ["$q", "$http", "$rootScope", "dbBase", function ($q, $http, $rootScope, dbBase) {
+        .service('stfMarkersRepository', ["$q", "$http", "$rootScope", "dbBase", function ($q, $http, $rootScope, dbBase) {
 
             // Init vars
             var that = this;
