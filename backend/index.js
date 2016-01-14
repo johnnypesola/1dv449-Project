@@ -25,7 +25,7 @@ server.listen(8100, function () {
 require('./routes/v1.0/markers')(server);
 
 // Require scrapers
-require('./routes/scrapers/sverigeforaren.se')(server);
-require('./routes/scrapers/8a.nu')(server);
+//require('./routes/scrapers/sverigeforaren.se')(server);
+//require('./routes/scrapers/8a.nu')(server);
 
 

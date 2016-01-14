@@ -74,9 +74,11 @@ module.exports = function( server ) {
 // Public API calls
 
     // Get all markers
+    /* Disabled for now. Needs authentication.
+
     server.get(baseRoute, function (req, res, next) {
 
-        // Find all
+        // Find all/
         MarkerDAL.find({}, function(error, results) {
 
             if(error){
@@ -88,6 +90,7 @@ module.exports = function( server ) {
             return next();
         })
     });
+    */
 
     // Returns all markers near given longitude and latitude values
     server.get(baseRoute + "/all-near", function (req, res, next) {
@@ -146,6 +149,8 @@ module.exports = function( server ) {
     });
 
     // Remove marker
+    /* Disabled for now. Needs authentication.
+
     server.del(baseRoute, function(req, res, next) {
 
         var id = (req.params._id);
@@ -174,8 +179,11 @@ module.exports = function( server ) {
             return displayError(res, next);
         }
     });
+     */
 
     // Remove all markers
+    /* Disabled for now. Needs authentication.
+
     server.del(baseRoute + "/clear", function(req, res, next) {
 
         // Try to remove document
@@ -193,8 +201,11 @@ module.exports = function( server ) {
             }
         )
     });
+     */
 
     // Save marker
+    /* Disabled for now. Needs authentication.
+
     server.post(baseRoute, function (req, res, next) {
 
         // Create marker BLL object
@@ -225,8 +236,11 @@ module.exports = function( server ) {
 
         }
     });
+     */
 
     // Save many markers
+    /* Disabled for now. Needs authentication.
+
     server.post(baseRoute + "/multi", function (req, res, next) {
 
         var containerObj = req.params;
@@ -275,5 +289,6 @@ module.exports = function( server ) {
             displayError(res, next);
         }
     })
+     */
 };
 
