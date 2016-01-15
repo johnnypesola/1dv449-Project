@@ -25,13 +25,22 @@
                     name: "8a",
                     initName: "8aMarkersRepository",
                     enabled: true,
-                    reference: {}
+                    reference: {},
+                    type: "climbing"
                 },
                 {
                     name: "Sverigeföraren",
                     initName: "sverigeforarenMarkersRepository",
                     enabled: true,
-                    reference: {}
+                    reference: {},
+                    type: "climbing"
+                },
+                {
+                    name: "Svenska Turistföreningen",
+                    initName: "stfMarkersRepository",
+                    enabled: true,
+                    reference: {},
+                    type: "accommodation"
                 }
             ];
 
@@ -87,16 +96,26 @@
 
             var addMarkersToDb = function() {
 
-                dbBase.insertMany("marker", ["eid", "lat", "lng", "name", "href", "source", "date"], that.markerObjArray);
+                dbBase.insertMany("marker", ["eid", "lat", "lng", "name", "href", "source", "date", "type"], that.markerObjArray);
 
             };
 
-            var selectClosestMarkersFromDb = function(lat, lng, count, distance) {
+            var selectClosestMarkersFromDb = function(servicesArray, lat, lng, count, distance) {
 
-                var deferred, boxCoords;
+                var deferred, boxCoords, sourcesArray = [], valuesArray = [], whereQuery = "";
 
                 // Create promise
                 deferred = $q.defer();
+
+                // No service data to get. Resolve promise
+                if(servicesArray.length === 0){
+                    deferred.resolve([]);
+                }
+
+                // Get source names and remove potentially harmful chars.
+                servicesArray.forEach(function(service){
+                    sourcesArray.push(service.name.replace(/[^a-z0-9åäöÅÄÖéè,\s\|]/gmi, ""));
+                });
 
                 // Check arguments, prevent sql injection
                 if(
@@ -128,14 +147,30 @@
                         ]
                      */
 
-                    dbBase.querySelect("SELECT * FROM marker ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
-                        [+lat, +lng, +count]
+                    // Build non harmful query strings of service sources
+                    sourcesArray.forEach(function(sourceName, index){
+
+                        // Build where query string, no user input goes into the where query.
+                        whereQuery += "source = ? " + (index+1 !== sourcesArray.length ? " OR " : "");
+
+                        // Push potential dangerous user input value into array
+                        valuesArray.push(sourceName);
+                    });
+
+                    // Push other values in the array in the correct order.
+                    valuesArray.push(+lat, +lng, +count);
+
+                    dbBase.querySelect("SELECT * FROM marker WHERE " +
+                        whereQuery +
+                        " ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
+                        valuesArray
                     )
                         .then(function(result){
 
                             deferred.resolve(result);
                         })
                         .catch(function(error){
+
                             deferred.reject(error);
                         })
 
@@ -163,12 +198,15 @@
 
             var fetchAllLocalMarkersNear = function(latLongObj, count, distance) {
 
-                var deferred;
+                var deferred, servicesArray;
 
                 // Create promise
                 deferred = $q.defer();
 
-                selectClosestMarkersFromDb(latLongObj.lat, latLongObj.lng, +count, distance)
+                // Get all markers from enabled services. And concatenate into one array.
+                servicesArray = that.getEnabledServices();
+
+                selectClosestMarkersFromDb(servicesArray, latLongObj.lat, latLongObj.lng, +count, distance)
                     .then(function(result){
 
                         that.markerObjArray = result;
@@ -255,6 +293,17 @@
 
             that.getServices = function () {
                 return markerServicesArray;
+            };
+
+            that.getServiceType = function(serviceName){
+
+                var serviceInQuestion;
+
+                serviceInQuestion = markerServicesArray.find(function (service) {
+                    return service.name == serviceName;
+                });
+
+                return serviceInQuestion.type;
             };
 
             that.disableService = function (serviceName) {

@@ -11,7 +11,7 @@
 
         .factory('DbMarker', ['$q', function ($q) {
 
-            var DbMarker = function(id, eid, lat, lng, name, href, source, date, dis){
+            var DbMarker = function(id, eid, lat, lng, name, href, source, date, dis, type){
 
                 var that = this;
                 that.isPreparedForDb = false;
@@ -26,6 +26,7 @@
                 that.source = source || "";
                 that.date = date || new Date();
                 that.dis = dis || -1;
+                that.type = type || "climbing";
 
                 // Declare dbTable get only property
                 Object.defineProperty(that, "dbTableName", {

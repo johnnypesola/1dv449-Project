@@ -12,8 +12,7 @@
         .controller('MapCtrl', ["$scope", "$rootScope", "$cordovaNetwork", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$timeout", function ($scope, $rootScope, $cordovaNetwork, $state, $q, mapHelper, Markers, $ionicLoading, $timeout) {
 
         /* Init vars */
-            var controllerStateName = "tab.map";
-            var markerObjArray = [];
+            var timeToWaitBeforeGpsInitialization = 3000; // 3 seconds
 
             $scope.activeMarker = {};
             $scope.isPopupVisible = false;
@@ -114,14 +113,21 @@
 
                     // Track position User phone GPS, after init animation potentially has finished.
                     console.log("mapCtrl::called mapHelper::startTrackingUserPosition()");
-                    mapHelper.startTrackingUserPosition()
-                        .catch(function(errorMsg){
 
-                            // Show popup
-                            showPopup({
-                                title: errorMsg
-                            });
-                        });
+                    // We have to give the device time to initiate the GPS, or we will get permission denied.
+                    // As for now there is not any way for us to check this. So all we can do is wait a little.
+                    $timeout(function(){
+
+                            mapHelper.startTrackingUserPosition()
+                                .catch(function(errorMsg){
+
+                                    // Show popup
+                                    showPopup({
+                                        title: errorMsg
+                                    });
+                                })
+                        }, timeToWaitBeforeGpsInitialization
+                    );
 
                 });
 

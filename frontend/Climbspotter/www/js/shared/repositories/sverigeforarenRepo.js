@@ -87,7 +87,8 @@
                                     marker.obj.href,
                                     marker.obj.source,
                                     marker.obj.date,
-                                    marker.dis
+                                    marker.dis,
+                                    "climbing"
                                 )
                             );
                         });

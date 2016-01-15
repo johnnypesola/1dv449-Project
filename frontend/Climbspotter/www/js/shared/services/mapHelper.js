@@ -48,6 +48,12 @@
                 },
                 climbing_pirate: {
                     url: 'www/img/marker_pirate.png'
+                },
+                accommodation: {
+                    url: 'www/img/marker_accommodation.png'
+                },
+                accommodation_pirate: {
+                    url: 'www/img/marker_pirate.png'
                 }
             };
 
@@ -79,6 +85,8 @@
                 if (that.isPirateMode) {
                     iconType += '_pirate';
                 }
+
+                console.log("makeIcon:: markerIcons[iconType]", markerIcons[iconType]);
 
                 return {
                     url: markerIcons[iconType].url
@@ -501,7 +509,7 @@
                     //console.log("Marker does not exist... Creating ", dbMarkerObj.eid);
 
                     // Create marker on map
-                    createMapMarker(dbMarkerObj, "climbing")
+                    createMapMarker(dbMarkerObj, dbMarkerObj.type)
 
                         // Marker created
                         .then(function(mapMarker){

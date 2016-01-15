@@ -144,6 +144,7 @@
                         "source TEXT, " +
                         "date NUMERIC, " +
                         "dis REAL, " +
+                        "type TEXT, " +
                         "UNIQUE(lat, lng)" + // Two markers having the exact same position cannot be stored in database.
                         ")"
                     )

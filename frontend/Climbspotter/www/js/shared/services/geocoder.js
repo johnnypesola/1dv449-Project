@@ -20,35 +20,85 @@
 
             /* Private Methods START */
 
+
+            var replaceCountyName = function(countyName){
+
+                countyName = countyName.toLowerCase();
+
+                // This is all wrong.. No time to fix.
+
+                if(countyName == "blekinge län"){
+                    return "Blekinge";
+                }
+                else if(countyName == "dalarnas län"){
+                    return "Dalarna";
+                }
+                else if(countyName == "gotlands län"){
+                    return "Gotland";
+                }
+                else if(countyName == "gävleborgs län"){
+                    return "Gävleborg";
+                }
+                else if(countyName == "hallands län"){
+                    return "Halland";
+                }
+                else if(countyName == "jämtlands län"){
+                    return "Jämtland";
+                }
+                else if(countyName == "jönköpings län"){
+                    return "Jönköping";
+                }
+                else if(countyName == "kalmar län"){
+                    return "Småland";
+                }
+                else if(countyName == "kronobergs län"){
+                    return "Kronoberg";
+                }
+                else if(countyName == "norrbottens län"){
+                    return "Lappland";
+                }
+                else if(countyName == "skåne län"){
+                    return "Skåne";
+                }
+                else if(countyName == "stockholms län"){
+                    return "Stockholm";
+                }
+                else if(countyName == "södermanlands län"){
+                    return "Södermanland";
+                }
+                else if(countyName == "uppsala län"){
+                    return "Uppsala";
+                }
+                else if(countyName == "värmlands län"){
+                    return "Värmland";
+                }
+                else if(countyName == "västerbottens län"){
+                    return "Västerbotten";
+                }
+                else if(countyName == "västra götalands län"){
+                    return "Bohuslän";
+                }
+                else if(countyName == "västernorrlands län"){
+                    return "Medelpad";
+                }
+                else if(countyName == "västmanlands län"){
+                    return "Västmanland";
+                }
+                else if(countyName == "örebro län"){
+                    return "Närke";
+                }
+                else if(countyName == "östergötlands län"){
+                    return "Östergötland";
+                }
+                else {
+                    return countyName;
+                }
+            };
+
+
             /* Private Methods END */
 
             /* Public Methods START */
-
-            // Example of a JSON response from API
-            /*
-             {
-             "data": {
-             "items": [
-             {
-             "type": "facility",
-             "id": 2288,
-             "title": "STF Abisko Fjällstation",
-             "url": "https://www.svenskaturistforeningen.se/anlaggningar/stf-abisko-fjallstation/",
-             "price": "445",
-             "image_url": "https://lajka.stfturist.se/v1/image/citybreak/4007906",
-             "location_name": "Abisko-Kebnekaisefjällen",
-             "position": {
-             "latitude": 68.35810562108,
-             "longitude": 18.783799409866
-             },
-             "category_name": "Fjällstation",
-             "color": "#8c013c",
-             "splash_text": "Boka nu: 30% rabatt"
-             },
-             ...
-             }
-             }
-             */
 
             that.getCountyForCoordinates = function (lat, lng) {
 
@@ -72,9 +122,10 @@
                         if(response.status == "OK"){
                             // Return parsed array
                             deferred.resolve(
-
-                                // The county name result nested quite deep in the response
-                                response.results[0]['address_components'][0].long_name
+                                replaceCountyName(
+                                    // The county name result nested quite deep in the response
+                                    response.results[0]['address_components'][0].long_name
+                                )
                             );
                         }
                         else {
