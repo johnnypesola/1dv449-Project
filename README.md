@@ -10,7 +10,7 @@ Tekniker som använs:
 - Frontend: (Javascript) Angular.js, Ionic, Cordava, SQLite, Google Maps API
 - Backend: (Javascript) MongoDB, Node.js
 
-[Demonstrationsfilm för Appen](https://www.youtube.com/watch?v=Nu6H7tAVJ)
+[Demonstrationsfilm för Appen](https://www.youtube.com/watch?v=Nu6H7tAVJOk)
 
 [Android app (frontend) finns att ladda ner här](frontend/climbspotter.apk)
 
