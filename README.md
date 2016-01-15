@@ -1,11 +1,7 @@
 # 1dv449-Project
 A mashup application for the course 1dv449 on Linnaeus University
 
-[Android app (frontend) finns att ladda ner här](frontend/climbspotter.apk)
-
-## The Mashup, initial vision
-
-Appnamn: Climbspotter
+## Appnamn: Climbspotter
 
 ### Inledning
 
@@ -15,6 +11,8 @@ Tekniker som använs:
 - Backend: (Javascript) MongoDB, Node.js
 
 [Demonstrationsfilm för Appen](https://www.youtube.com/watch?v=Nu6H7tAVJ)
+
+[Android app (frontend) finns att ladda ner här](frontend/climbspotter.apk)
 
 Anledningen till att appen blev av är att jag personligen i flera år har tyckt att det saknas en bra överblick och sammanställning av all klättring som finns i trakterna omkring. Klättersidorna som finns på nätet är få och innehåller till största del olika klättringsinformation. Som klättrare så måste man ha koll på alla dessa och gå in på varje enskild för att ta reda på om det kan finns någon klättring av intresse i närheten.
 
