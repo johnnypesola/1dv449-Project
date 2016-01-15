@@ -23,7 +23,7 @@ Inledning där du kort beskriver vad du gjort och bakgrunden till din applikatio
 
 ### Schematisk bild
 
-
+![GitHub Logo](app_schema.png)
 
 
 Inkludera en schematisk bild över applikationens beståndsdelar så att läsaren har enklare att förstå applikationens dataflöde.
