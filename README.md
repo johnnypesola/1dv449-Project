@@ -5,7 +5,7 @@ A mashup application for the course 1dv449 on Linnaeus University
 
 ## The Mashup, initial vision
 
-Appnaamn: Climspotter
+Appnamn: Climbspotter
 
 ### Inledning
 
@@ -20,8 +20,6 @@ Anledningen till att appen blev av är att jag personligen i flera år har tyckt
 
 Idag så finns det inga liknande applikationer vad jag vet, men jag kan ha fel. Klättersidorna har dock delvis börjar komma ut med sina egna mer avancerade applikationer. Men ingen har syftet att fungera som en "sökmotor"  för all klättring som denna app har som syfte att göra.
 
-
-Inledning där du kort beskriver vad du gjort och bakgrunden till din applikation. Finns det liknande applikationer redan? Vilka tekniker har använts.
 
 ### Schematisk bild
 
@@ -41,8 +39,6 @@ När det gäller säkerhet så har jag gjort mitt bästa för att läsa på, hit
 
 Genom hur applikationen är uppbyggd så har användaren stor kontroll äver appens prestanda. Det går att förstora och förminska sökningsurvalet på både area och antalet för önskat resultat. All information som hämtas sparas ju dessutom lokalt i databasen. Denna används så fort som applikationen känner att användaren hamnar i offline-läge eller när användare väljer att slå på offline-läget själv.
 
-Säkerhet och prestandaoptimering - Hur har du funderat kring säkerhet och prestanda och vilken teori har du kopplat detta emot.
-
 ### Offline-first
 
 Appen har ett väldigt bra offline-läge, som slås på automatiskt eller vid användarens önskan. Eftersom det är en SQLite databas som lagras i telefonens filsystem så har den potentialen att rymma mycket mer än localstorage i webbläsaren. Den inbyggda Google Maps API:t (Android versionen) tar emot vektorgrafik och visade sig gå betydligt snabbare, stabilare och snyggare än Google Maps javascript API:t som jag använde mig av först. Skillnaden i prestanda och stabilitet är stor och jag är glad att jag tog mig tiden att genomföra bytet, vilket till en början var ett tveksamt beslut.
@@ -52,8 +48,6 @@ Appen har ett väldigt bra offline-läge, som slås på automatiskt eller vid an
 Den största risken helt klart är vid offentliggörandet av appen. Den är byggd som ett testprojekt som faktiskt visade sig bli riktigt bra och riktigt användbart för en klättrare. Det här är precis det som saknas. Men eftersom den grundar sig på andras information kan de vid närmare kontakt visa sig fientliga till att deras information används på det här sättet. Jag har visionen om att applikationen ska vara en gratis sökmotor för just klättring och bidra med nya användare till klättringshemsidorna, vilket jag tänker att de bara kan se som en positiv sak. Men risken finns att de inte har lika positiv syn på projektet som jag själv.
    
 Säkerhetsmässigt finns risken att någon lyckas få kontroll över backenden genom SQL injections, felkonfigurerad mjukvara eller använda sig av något för mig helt okänt säkerhetshål i mobilapplikationen. Men jag har verkligen gjort mitt bästa för att täppa igen de hål jag sett, fast det ibland har varit knepigt på grund av tidsbristen.
-
-Risker med din applikation: Reflektera över vilka risker det finns med din applikation; rent tekniskt, säkerhet, etiskt m.m.
 
 ### Reflektion
 Jag tycker att Ionic är ett fantastiskt ramverk. Jag är glad över att Angular, Ionic, Cordava, Node.js och MongoDB finns till som gör detta arbete så roligt och häftigt. Det är som byggt för att göra sådana här applikationen. Och i och med att man använder webb-teknologi så är det mycket enklare att få ut applikationen till både IOS och Android enheter. Just för min egen utveckling så passade detta ramverk perfekt. Jag lärde mig tidigare under året Angular och det här var den perfekta utvecklingskursen. Dock har det blivit mycket tid som gått att läsa på om just denna teknologi, men väl värt den nerlagda tiden.
