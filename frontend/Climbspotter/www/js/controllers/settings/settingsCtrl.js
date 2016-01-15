@@ -22,6 +22,7 @@
                 $scope.mapMarkerLimit = mapHelper.mapMarkerLimit;
                 $scope.mapMarkerBoundsRadiusInKm = mapHelper.mapMarkerBoundsRadiusInKm;
                 $scope.mapMarkerBoundsRadiusInMiles = kmToMiles($scope.mapMarkerBoundsRadiusInKm);
+                $scope.doesGpsRequiresRestart = mapHelper.doesGpsRequiresRestart;
             };
 
             /* Private Methods END */
@@ -31,11 +32,25 @@
             };
 
             /* Public Methods START */
-
             $scope.toggleTracking = function (isTrackingUserPosition) {
 
                 if (isTrackingUserPosition) {
-                    mapHelper.startTrackingUserPosition();
+
+                    // Try start tracking user posion
+                    mapHelper.startTrackingUserPosition()
+
+                        // Could not start tracking user position
+                        .catch(function(errorMsg){
+
+
+                            $rootScope.$broadcast(
+                                "popupMessage:updated",
+                                "Could not get GPS position. Make sure device GPS and tracking in options is enabled."
+                            );
+
+                            $scope.isTrackingUserPosition = false;
+                            mapHelper.stopTrackingUserPosition();
+                        });
                 }
                 else {
                     mapHelper.stopTrackingUserPosition();

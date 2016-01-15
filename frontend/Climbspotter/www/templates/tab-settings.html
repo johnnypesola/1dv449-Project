@@ -1,8 +1,8 @@
 <ion-view view-title="Settings">
     <ion-content ng-controller="SettingsCtrl">
 
-        <ion-toggle toggle-class="toggle-calm" ng-model="isTrackingUserPosition" ng-click="toggleTracking(isTrackingUserPosition)">
-            Track device GPS position
+        <ion-toggle toggle-class="toggle-calm" ng-model="isTrackingUserPosition" ng-click="toggleTracking(isTrackingUserPosition)" ng-disabled="doesGpsRequiresRestart">
+            Track GPS position <span class="faded-setting">{{doesGpsRequiresRestart ? "(Needs app restart)" : ""}}</span>
         </ion-toggle>
 
         <ion-toggle toggle-class="toggle-calm" ng-model="isForcedOfflineMode" ng-click="toggleForcedOfflineMode(isForcedOfflineMode)">
@@ -14,7 +14,7 @@
         </ion-toggle>
 
         <div class="item item-divider">
-            Max marker count: <span>{{mapMarkerLimit}}</span>
+            Max marker count: <span class="faded-setting">{{mapMarkerLimit}}</span>
         </div>
         <div class="item range range-calm">
             <i class="icon ion-ios-location-outline"></i>
@@ -30,7 +30,7 @@
         </div>
 
         <div class="item item-divider">
-            Spot radius: <span>{{mapMarkerBoundsRadiusInKm}} km / {{mapMarkerBoundsRadiusInMiles}} miles</span>
+            Spot radius: <span class="faded-setting">{{mapMarkerBoundsRadiusInKm}} km / {{mapMarkerBoundsRadiusInMiles}} miles</span>
         </div>
         <div class="item range range-calm">
             <i class="icon ion-ios-search"></i>

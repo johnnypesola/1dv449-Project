@@ -9,7 +9,7 @@
         )
 
         // Controller
-        .controller('MapCtrl', ["$scope", "$rootScope", "$cordovaNetwork", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$ionicPopup", function ($scope, $rootScope, $cordovaNetwork, $state, $q, mapHelper, Markers, $ionicLoading, $ionicPopup) {
+        .controller('MapCtrl', ["$scope", "$rootScope", "$cordovaNetwork", "$state", "$q", "mapHelper", "Markers", "$ionicLoading", "$timeout", function ($scope, $rootScope, $cordovaNetwork, $state, $q, mapHelper, Markers, $ionicLoading, $timeout) {
 
         /* Init vars */
             var controllerStateName = "tab.map";
@@ -46,6 +46,8 @@
 
             var setOffline = function(status){
                 $rootScope.isOfflineIndicatorVisible = status;
+
+                console.log("mapCtrl::setOffline: status", status);
 
                 if(status){
                     mapHelper.removeMarkerBoundsCircle();
@@ -97,7 +99,7 @@
                                     title: errorMsg
                                 });
 
-                                console.log("getAllMarkersNear FAILED: mapCtrl");
+                                console.log("mapCtrl::getAllMarkersNear failed: ", errorMsg);
                             })
                     });
 
@@ -108,10 +110,18 @@
         /* Initialization START */
 
             mapHelper.loadGoogleMaps()
-                .then(function () {
+                .then(function(){
 
-                    // User phone GPS to track position
-                    mapHelper.startTrackingUserPosition();
+                    // Track position User phone GPS, after init animation potentially has finished.
+                    console.log("mapCtrl::called mapHelper::startTrackingUserPosition()");
+                    mapHelper.startTrackingUserPosition()
+                        .catch(function(errorMsg){
+
+                            // Show popup
+                            showPopup({
+                                title: errorMsg
+                            });
+                        });
 
                 });
 
@@ -165,6 +175,18 @@
 
                 mapHelper.updateMapMarkerBoundsCirclePositionIfNeeded();
 
+            });
+
+            // If some other code sends a popup request
+            $rootScope.$on('popupMessage:updated', function(event, message) {
+
+                // If there is a message
+                if(message){
+
+                    showPopup({
+                        title: message
+                    });
+                }
             });
 
         /* Watchers END */

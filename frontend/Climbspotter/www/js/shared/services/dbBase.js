@@ -16,12 +16,6 @@
             var dbName = "app.db";
             var dbDeferred = $q.defer(); // DB level promise. Resolves when its ready for usage.
 
-            // Valid table names
-            var validTableNames = [
-                'settings',
-                'markers'
-            ];
-
             // Service properties
             that.db = {};
 
@@ -88,6 +82,7 @@
                     ")";
             };
 
+            /* TODO: Fix or remove, not used.
             var buildSelectQuery = function(tableName, propertiesArray, comparisonArray, andOrArray){
 
                 var returnQuery = "";
@@ -114,22 +109,21 @@
 
                     return returnQuery;
 
-                    /*
-                    propertiesArray.join(", ") + " VALUES (" +
+
+                    //propertiesArray.join(", ") + " VALUES (" +
 
                         // Output values as = "?, ?, ?..." required for query
-                        propertiesArray.map(function(){
-                            return "?";
-                        }).join(", ") +
+                        //propertiesArray.map(function(){
+                            //return "?";
+                        //}).join(", ") +
 
-                        ")";
-                    */
+                        //")";
                 }
-
-
 
                 return returnQuery;
             };
+
+            */
 
             var setupMarkersTable = function(){
 
@@ -201,9 +195,6 @@
 
                     var i;
 
-                    console.log("QUERY: ", results);
-                    console.log(results.rows.length);
-
                     // Build proper results to return
                     for (i = 0; i < results.rows.length; i++) {
 
@@ -217,12 +208,13 @@
                     // Something went wrong
                     console.error(err);
 
-                    deferred.reject("Could not select from DB");
+                    deferred.reject("Could not get data from offline database");
                 });
 
                 return deferred.promise;
             };
 
+            /* TODO: Fix or remove, not used.
             that.select = function(tableName, propertiesArray, comparisonArray, valuesArray, andOrArray){
 
                 var query, deferred;
@@ -233,11 +225,7 @@
                 // Build query string
                 query = buildSelectQuery(tableName, propertiesArray, comparisonArray, andOrArray);
 
-                console.log("SELECT QUERY: ", query);
-
                 $cordovaSQLite.execute(that.db, query, valuesArray).then(function (res) {
-
-                    console.log(tableName + ": select", res);
 
                     // Resolve promise
                     deferred.resolve(res);
@@ -247,12 +235,10 @@
                     // Something went wrong
                     console.error(err);
 
-                    deferred.reject("Could not select from DB");
+                    deferred.reject("Could not get data from offline database");
                 });
-
-
-
             };
+            */
 
             that.insertMany = function(tableName, propertiesArray, objectsArray){
 
@@ -291,8 +277,6 @@
                     // Execute query
                     $cordovaSQLite.insertCollection(that.db, query, valueCollectionArray).then(function (res) {
 
-                        console.log(tableName + ": insertCollection: insertId: ", res);
-
                         // Resolve promise
                         deferred.resolve(res.insertId);
 
@@ -301,12 +285,12 @@
                         // Something went wrong
                         console.error(err);
 
-                        deferred.reject("Could not insert valid collection to DB");
+                        deferred.reject("Could not insert valid data into offline database");
                     });
                 }
                 else {
 
-                    deferred.reject("Could not insert invalid collection to DB");
+                    deferred.reject("Could not insert invalid data into offline database");
                 }
 
                 // Return promise
@@ -314,6 +298,8 @@
             };
 
             that.insert = function(tableName, propertiesArray, valuesArray) {
+
+                // Dont use this method to insert many elements. Its pretty slow. Use this.insertMany instead
 
                 var query, deferred;
 
@@ -334,8 +320,6 @@
                     // Execute query
                     $cordovaSQLite.execute(that.db, query, valuesArray).then(function (res) {
 
-                        console.log(tableName + ": insertId: " + res.insertId);
-
                         // Resolve promise
                         deferred.resolve(res.insertId);
 
@@ -343,13 +327,13 @@
 
                         console.error(err);
 
-                        deferred.reject("Could not insert valid object to DB");
+                        deferred.reject("Could not insert valid object to offline database");
                     });
 
                 }
                 else {
 
-                    deferred.reject("Could not insert invalid object to DB");
+                    deferred.reject("Could not insert invalid object to offline database");
                 }
                 // Return promise
                 return deferred.promise;

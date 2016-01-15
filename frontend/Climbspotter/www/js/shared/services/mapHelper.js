@@ -11,7 +11,7 @@
 
         /* For google maps plugin specific documentation. See https://github.com/mapsplugin/cordova-plugin-googlemaps/wiki */
 
-        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "$rootScope", function ($q, $ionicPlatform, $cordovaGeolocation, $rootScope) {
+        .service('mapHelper', ["$q", "$ionicPlatform", "$cordovaGeolocation", "$rootScope", "$interval", function ($q, $ionicPlatform, $cordovaGeolocation, $rootScope, $interval) {
 
         /* Init vars */
             var that = this;
@@ -19,9 +19,11 @@
             var userPositionWatch;
             var userMarker;
             var isTrackingUserPosition = false;
+            var userPosWatchPromise;
+            var animateCameraPromise;
             var mapTileOverlay;
             var mapMarkerBoundsCircle = {};
-
+            var userPositionTrackingInterval = 1000;
 
             // Keep track of google map Markers, these are the actual ones visible on the map.
             var googleMapMarkers = [];
@@ -49,24 +51,25 @@
                 }
             };
 
-            // Map presentation options
-            var mapOptions = {
-                compass: true,
-                myLocationButton: true,
-                indoorPicker: true,
-                zoom: true
-            };
-
             // Service properties
             that.userPosition = {coords: {latitude: 0, longitude: 0}};
             that.map = {};
-            that.defaultZoom = 12;
+            that.defaultZoom = 7;
             that.animationDuration = 2000; // 2 seconds;
             that.defaultMapType = "TERRAIN";
             that.isPirateMode = false;
             that.mapMarkerLimit = 300;
             that.mapMarkerBoundsRadiusInKm = 100; // Kilometers
             that.shouldUpdateMapMarkerBoundsCirclePosition = true;
+            that.doesGpsRequiresRestart = false;
+
+            // Map presentation options
+            var mapOptions = {
+                controls:
+                {
+                    compass: true
+                }
+            };
 
         /* Private methods START */
 
@@ -145,9 +148,13 @@
                         // Create LatLng
                         centerLatLng = new that.google.maps.LatLng(center.lat, center.lng);
 
-                        // Set position
-                        mapMarkerBoundsCircle.setCenter(centerLatLng);
 
+                        console.log("mapHelper::updateMapMarkerBoundsCirclePosition was called");
+
+                        // Set position
+                        if(mapMarkerBoundsCircle && mapMarkerBoundsCircle.setCenter) {
+                            mapMarkerBoundsCircle.setCenter(centerLatLng);
+                        }
                     });
             };
 
@@ -159,6 +166,50 @@
                     Math.pow( coords2.lng - coords1.lng, 2 ) +
                     Math.pow( coords2.lat - coords1.lat, 2 )
                 );
+            };
+
+            var startUserPosAgeWatchInterval = function (){
+
+                // Only initiate once
+                if(!userPosWatchPromise) {
+
+                    // Interval that checks if user coordinates are too old
+                    userPosWatchPromise = $interval(function(){
+
+                            // Check if we have a valid user position yet
+                            if(isTrackingUserPosition && that.userPosition.timestamp){
+
+                                var secondsDifference, dateNow = new Date();
+
+                                // Calculate difference
+                                secondsDifference = (dateNow.getTime() - that.userPosition.timestamp) / 1000;
+
+                                console.log("mapHelper::startUserPosAgeWatchInterval: secondsDifference, timeout", secondsDifference, getGpsPosOptions.timeout / 1000);
+
+                                // If the GPS coordinates are to old.
+                                if(secondsDifference > (getGpsPosOptions.timeout / 1000)){
+
+                                    console.log("mapHelper::startUserPosAgeWatchInterval: Too old now");
+
+                                    // Set status and update icon
+                                    isTrackingUserPosition = false;
+                                    that.updateUserMarker();
+                                }
+                            }
+                            else {
+                                console.log("mapHelper::startUserPosAgeWatchInterval: Not tracking user position");
+                            }
+                        },
+
+                        userPositionTrackingInterval
+                    );
+                }
+            };
+
+            var stopUserPosAgeWatchInterval = function (){
+
+                // Cancel this interval
+                $interval.cancel(userPosWatchPromise);
             };
 
             var sortMarkersArrayByProximity = function ( refCoords, coordsArray ) {
@@ -269,43 +320,47 @@
                     that.map = window.plugin.google.maps.Map.getMap(mapCanvasElement);
                     that.google = window.plugin.google;
 
-                    // Set Map options
-                    that.map.setOptions(mapOptions);
-
                     // When google maps is ready
                     that.map.addEventListener(that.google.maps.event.MAP_READY, function () {
 
-                        // Update user position
-                        that.updateUserPosition()
+                        // Set Map options
+                        that.map.setOptions(mapOptions);
 
-                            // All went good
-                            .then(function () {
+                        // Set default map type
+                        that.setMapType(that.defaultMapType);
 
-                                // Move camera to user location
-                                that.animateCameraTo(that.userPosition.coords.latitude, that.userPosition.coords.longitude)
-                                    .then(function(){
+                        // Add marker bounds circle
+                        that.addMarkerBoundsCircle();
 
-                                        // Set default map type
-                                        that.setMapType(that.defaultMapType);
+                        // Animate camera to user position.
+                        that.animateCameraToUserPosition();
 
-                                        // Add marker bounds circle
-                                        that.addMarkerBoundsCircle();
-                                    });
-
-                                // Resolve promise
-                                deferred.resolve();
-                            })
-
-                            // An error occured
-                            .catch(function (msg) {
-
-                                deferred.reject(msg)
-                            });
+                        // Resolve promise
+                        deferred.resolve();
                     });
                 });
 
                 // Return promise
                 return deferred.promise;
+            };
+
+            that.animateCameraToUserPosition = function(){
+
+                animateCameraPromise = $interval(function(){
+
+                        // Check if we have a valid user position yet
+                        if(that.userPosition.coords.latitude !== 0){
+
+                            // Move camera to user location
+                            that.animateCameraTo(that.userPosition.coords.latitude, that.userPosition.coords.longitude);
+
+                            // Cancel this interval
+                            $interval.cancel(animateCameraPromise);
+                        }
+                    },
+
+                    userPositionTrackingInterval
+                );
             };
 
             that.animateCameraTo = function(lat, lng, duration, zoom) {
@@ -412,7 +467,13 @@
 
                         // Loop though potential map markers
                         dbMarkersArray.forEach(function(dbMarker){
-                            that.addMarkerToMap(dbMarker);
+                            if(
+                                !validate.isEmpty(dbMarker.lat) &&
+                                !validate.isEmpty(dbMarker.lng)
+                            ){
+                                that.addMarkerToMap(dbMarker);
+                            }
+
                         });
                     });
 
@@ -437,7 +498,7 @@
                     })
                 ){
 
-                    console.log("Marker does not exist... Creating ", dbMarkerObj.eid);
+                    //console.log("Marker does not exist... Creating ", dbMarkerObj.eid);
 
                     // Create marker on map
                     createMapMarker(dbMarkerObj, "climbing")
@@ -512,22 +573,30 @@
 
                 $cordovaGeolocation.getCurrentPosition(getGpsPosOptions).then(function (position) {
 
-
                     // Update user position
                     that.userPosition = position;
-
-                    // Resolve promise
-                    deferred.resolve();
-
 
                     // Update user marker on map
                     that.updateUserMarker();
 
+                    // Resolve promise
+                    deferred.resolve();
 
                 }, function (error) {
 
+                    console.log("mapHelper::updateUserPosition: Could not get user position.", error);
+
                     // Reject promise
-                    deferred.reject("Could not get user position.")
+                    deferred.reject("Could not get user position.");
+
+                    $rootScope.$broadcast(
+                        "popupMessage:updated",
+                        "Could not get GPS position. Make sure device GPS is enabled and restart Climbspotter."
+                    );
+
+                    that.doesGpsRequiresRestart = true;
+                    isTrackingUserPosition = false;
+
                 });
 
                 // Return promise
@@ -536,11 +605,21 @@
 
             that.startTrackingUserPosition = function () {
 
+                var deferred;
+
+                // Create promise
+                deferred = $q.defer();
+
                 // Watch options
                 var watchOptions = {
-                    timeout: 5000,
+                    timeout: userPositionTrackingInterval,
+                    maximumAge: 10000,
                     enableHighAccuracy: false // may cause errors if true
                 };
+
+                // Because the $cordovaGeoLocation can not work on its own,
+                // we have to start a new interval that checks if users GPS positions are too old.
+                startUserPosAgeWatchInterval();
 
                 // Start tracking user position
                 userPositionWatch = $cordovaGeolocation.watchPosition(watchOptions);
@@ -548,10 +627,17 @@
                     null,
                     function (err) {
 
-                        console.log("Error tracking position");
+                        console.log("mapHelper::startTrackingUserPosition: Error tracking position", err);
+
+                        deferred.reject("Could not get GPS position. Make sure Flight mode is off and device GPS is enabled.");
+
+                        that.doesGpsRequiresRestart = true;
+                        isTrackingUserPosition = false;
                     },
                     // It went well
                     function (position) {
+
+                        console.log("mapHelper::startTrackingUserPosition: Got user position", position);
 
                         // Update user position
                         that.userPosition = position;
@@ -561,13 +647,19 @@
 
                         // Update user marker on map
                         that.updateUserMarker();
+
+                        // Resolve promise
+                        deferred.resolve();
                     }
                 );
+
+                // Return promise
+                return deferred.promise;
             };
 
             that.stopTrackingUserPosition = function () {
 
-                userPositionWatch.clearWatch();
+                $cordovaGeolocation.clearWatch(userPositionWatch.watchID);
 
                 isTrackingUserPosition = false;
 
@@ -588,6 +680,11 @@
             that.addMarkerBoundsCircle = function(){
 
                 var radius, centerLatLng;
+
+                // If there is a circle already. Abort
+                if(mapMarkerBoundsCircle && mapMarkerBoundsCircle.getCenter){
+                    return false;
+                }
 
                 radius = that.mapMarkerBoundsRadiusInKm * 1000; // * Times 1000 meters
 
@@ -626,7 +723,11 @@
 
             that.removeMarkerBoundsCircle = function() {
 
-                mapMarkerBoundsCircle.remove();
+                if(mapMarkerBoundsCircle && mapMarkerBoundsCircle.remove){
+                    mapMarkerBoundsCircle.remove();
+
+                    mapMarkerBoundsCircle = {};
+                }
             };
 
             that.setMarkerBoundsCircleVisibility = function(trueOrFalse) {

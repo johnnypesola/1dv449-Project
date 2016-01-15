@@ -87,8 +87,6 @@
 
             var addMarkersToDb = function() {
 
-                console.log("Trying to insert objects");
-
                 dbBase.insertMany("marker", ["eid", "lat", "lng", "name", "href", "source", "date"], that.markerObjArray);
 
             };
@@ -102,10 +100,10 @@
 
                 // Check arguments, prevent sql injection
                 if(
-                    validate.isNumber(lat) &&
-                    validate.isNumber(lng) &&
-                    validate.isNumber(count) &&
-                    validate.isNumber(distance)
+                    validate.isNumber(+lat) &&
+                    validate.isNumber(+lng) &&
+                    validate.isNumber(+count) &&
+                    validate.isNumber(+distance)
                 )
                 {
 
@@ -131,7 +129,7 @@
                      */
 
                     dbBase.querySelect("SELECT * FROM marker ORDER BY ABS(? - lat) + ABS(? - lng) ASC LIMIT ?",
-                        [lat, lng, count]
+                        [+lat, +lng, +count]
                     )
                         .then(function(result){
 
@@ -145,6 +143,7 @@
                 }
                 // Arguments are not ok.
                 else {
+                    console.log("markers::selectClosestMarkersFromDb: Invalid arguments", lat, lng, count, distance);
                     deferred.reject("markers::selectClosestMarkersFromDb: Invalid arguments");
                 }
 
@@ -172,8 +171,6 @@
                 selectClosestMarkersFromDb(latLongObj.lat, latLongObj.lng, +count, distance)
                     .then(function(result){
 
-                        console.log("MARKERS FROM DB: ",result);
-
                         that.markerObjArray = result;
 
                         deferred.resolve();
@@ -198,7 +195,6 @@
                 // Clear old marker data
                 that.markerObjArray = [];
 
-
                 // Get all markers from enabled services. And concatenate into one array.
                 servicesArray = that.getEnabledServices();
 
@@ -215,7 +211,7 @@
                         })
                         .catch(function(errorMsg){
 
-                            console.log("GET ALL NEAR LOOP ERROR");
+                            console.log("markers::fetchAllServiceMarkersNear failed");
 
                             // Error occured
                             loopDeferred.reject(errorMsg);
@@ -296,14 +292,10 @@
                 var deferred = $q.defer();
 
                 // Check if we are online and forced offline mode is off.
-                console.log("$cordovaNetwork.getNetwork() && !$rootScope.isForcedOfflineMode", $cordovaNetwork.getNetwork(), !$rootScope.isForcedOfflineMode);
-
                 if(isOnline() && !$rootScope.isForcedOfflineMode){
 
                     fetchAllServiceMarkersNear(latLongObj, distance)
                         .then(function () {
-
-                            console.log("fetchAllServiceMarkersNear Resolved");
 
                             // Add markers to map
                             addMarkersToMap();
@@ -316,7 +308,7 @@
                         })
                         .catch(function(errorMsg){
 
-                            console.log("fetchAllServiceMarkersNear FAILED");
+                            console.log("markers::fetchAllServiceMarkersNear FAILED");
 
                             deferred.reject(errorMsg);
                         });
@@ -338,7 +330,7 @@
                         })
                         .catch(function(errorMsg){
 
-                            console.log("fetchAllLocalMarkersNear FAILED");
+                            console.log("markers::fetchAllLocalMarkersNear FAILED");
 
                             deferred.reject(errorMsg);
                         });
