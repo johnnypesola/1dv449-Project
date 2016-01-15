@@ -118,13 +118,24 @@
                     // As for now there is not any way for us to check this. So all we can do is wait a little.
                     $timeout(function(){
 
+                            // Try two times before giving up
                             mapHelper.startTrackingUserPosition()
-                                .catch(function(errorMsg){
+                                .catch(function(){
 
-                                    // Show popup
-                                    showPopup({
-                                        title: errorMsg
-                                    });
+                                    $timeout(function() {
+
+                                        mapHelper.startTrackingUserPosition()
+                                            .catch(function(errorMsg){
+
+                                                // Show popup
+                                                showPopup({
+                                                    title: errorMsg
+                                                });
+                                            })
+
+                                        }, timeToWaitBeforeGpsInitialization
+                                    );
+
                                 })
                         }, timeToWaitBeforeGpsInitialization
                     );
